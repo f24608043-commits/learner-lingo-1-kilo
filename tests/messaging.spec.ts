@@ -2,10 +2,10 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Messaging System', () => {
   // Test credentials from existing tests
-  const TUTOR_EMAIL = 'orphix.itsolutions@gmail.com';
-  const TUTOR_PASSWORD = 'Qasim.11';
-  const ADMIN_EMAIL = 'alexabraham587@gmail.com';
-  const ADMIN_PASSWORD = 'Qasim.11';
+  const TUTOR_EMAIL = 'tutor@gmail.com';
+  const TUTOR_PASSWORD = 'tutor@1221';
+  const ADMIN_EMAIL = 'admin@gmail.com';
+  const ADMIN_PASSWORD = 'admin@1221';
 
   test('tutor can message another user via profile', async ({ page, context }) => {
     // Login as tutor
@@ -102,7 +102,7 @@ test.describe('Messaging System', () => {
     await expect(page).toHaveURL(/\/admin/, { timeout: 30000 });
     
     // Navigate to messages page
-    await page.goto('/messages');
+    await page.goto('/messages', { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle');
     
     // Check that messages page loads
@@ -124,7 +124,7 @@ test.describe('Messaging System', () => {
     await page.fill('input[name="password"]', ADMIN_PASSWORD);
     await page.click('button[type="submit"]');
     
-    await expect(page).toHaveURL(/\/path/, { timeout: 15000 });
+    await expect(page).toHaveURL(/\/admin/, { timeout: 15000 });
     
     // Navigate to course creation
     await page.goto('/admin/courses/new');
@@ -149,7 +149,7 @@ test.describe('Messaging System', () => {
     await expect(page).toHaveURL(/\/tutoring\/dashboard|\/path/, { timeout: 15000 });
     
     // Navigate to friends page
-    await page.goto('/friends');
+    await page.goto('/friends', { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle');
     
     // Check that friends page loads
@@ -166,7 +166,7 @@ test.describe('Messaging System', () => {
     await expect(page).toHaveURL(/\/tutoring\/dashboard|\/path/, { timeout: 15000 });
     
     // Navigate to tutoring page
-    await page.goto('/tutoring');
+    await page.goto('/tutoring', { waitUntil: 'domcontentloaded', timeout: 30000 });
     await page.waitForLoadState('networkidle');
     
     // Check that tutoring page loads
@@ -186,7 +186,7 @@ test.describe('Messaging System', () => {
     await expect(page).toHaveURL(/\/tutoring\/dashboard|\/path/, { timeout: 15000 });
     
     // Navigate to profile (using a placeholder ID, will test navigation structure)
-    await page.goto('/profile/some-id');
+    await page.goto('/profile/some-id', { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle');
     
     // Profile page should either load or show "User Not Found"
