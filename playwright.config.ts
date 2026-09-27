@@ -12,9 +12,9 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
-  reporter: 'html',
+  reporter: 'line',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://localhost:4000',
     trace: 'on-first-retry',
   },
 
@@ -26,9 +26,9 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    command: 'npm run dev -- -p 4000',
+    url: 'http://localhost:4000',
+    reuseExistingServer: true,
     timeout: 120 * 1000,
     stdout: 'pipe',
     stderr: 'pipe',

@@ -87,7 +87,7 @@ export default async function SignInPage({
 
           <button
             type="submit"
-            className="w-full mt-2 rounded-2xl bg-primary text-white py-3.5 px-6 font-label-lg font-black uppercase tracking-wider shadow-lg border-b-4 border-primary-dark hover:brightness-105 active:translate-y-[2px] active:border-b-[1px] transition-all cursor-pointer"
+            className="w-full mt-2 rounded-2xl bg-red-500 text-white py-3.5 px-6 font-label-lg font-black uppercase tracking-wider shadow-lg border-b-4 border-red-600 hover:brightness-105 active:translate-y-[2px] active:border-b-[1px] transition-all cursor-pointer"
           >
             Sign In 🚀
           </button>
