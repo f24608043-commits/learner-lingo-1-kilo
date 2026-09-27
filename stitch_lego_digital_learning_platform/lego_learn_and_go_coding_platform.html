@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>LEGO - Learn and Go Coding Platform</title>
+  
+  <!-- Fonts & Material Symbols -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&amp;family=Rubik:ital,wght@0,300..900;1,300..900&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+  
+  <style>
+    @layer base { 
+      html, body { margin: 0; padding: 0; } 
+      body { overscroll-behavior: none; } 
+      main > :first-child { margin-top: 0 !important; } 
+      main > :last-child { margin-bottom: 0 !important; } 
+    } 
+    ::-webkit-scrollbar { display: none; }
+  </style>
+
+  <!-- Tailwind CSS & Configuration -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-primary-fixed-variant": "#005321",
+            "on-error": "#ffffff",
+            "background": "#faf8ff",
+            "on-secondary-fixed": "#2a1700",
+            "tertiary-fixed": "#d8e2ff",
+            "on-primary-fixed": "#002109",
+            "on-tertiary-fixed": "#001a42",
+            "surface-container-high": "#e2e7ff",
+            "surface-variant": "#dae2fd",
+            "on-background": "#131b2e",
+            "on-surface-variant": "#3d4a3d",
+            "surface-dim": "#d2d9f4",
+            "primary": "#006e2f",
+            "secondary-container": "#fea619",
+            "secondary": "#855300",
+            "outline-variant": "#bccbb9",
+            "on-tertiary": "#ffffff",
+            "inverse-surface": "#283044",
+            "error": "#ba1a1a",
+            "on-secondary-container": "#684000",
+            "surface-container": "#eaedff",
+            "tertiary-container": "#82abff",
+            "on-surface": "#131b2e",
+            "on-secondary": "#ffffff",
+            "secondary-fixed": "#ffddb8",
+            "error-container": "#ffdad6",
+            "on-secondary-fixed-variant": "#653e00",
+            "primary-fixed": "#6bff8f",
+            "surface-container-lowest": "#ffffff",
+            "surface-bright": "#faf8ff",
+            "surface-container-low": "#f2f3ff",
+            "on-error-container": "#93000a",
+            "primary-fixed-dim": "#4ae176",
+            "surface": "#faf8ff",
+            "on-tertiary-fixed-variant": "#004395",
+            "primary-container": "#22c55e",
+            "tertiary": "#005ac2",
+            "on-primary": "#ffffff",
+            "surface-tint": "#006e2f",
+            "outline": "#6d7b6c",
+            "inverse-primary": "#4ae176",
+            "secondary-fixed-dim": "#ffb95f",
+            "on-primary-container": "#004b1e",
+            "surface-container-highest": "#dae2fd",
+            "tertiary-fixed-dim": "#adc6ff",
+            "on-tertiary-container": "#003d88",
+            "inverse-on-surface": "#eef0ff"
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          fontFamily: {
+            "headline-xl": ["Rubik"],
+            "headline-lg": ["Rubik"],
+            "headline-md": ["Rubik"],
+            "label-lg": ["Rubik"],
+            "label-md": ["Rubik"],
+            "label-sm": ["Rubik"],
+            "body-lg": ["Nunito Sans"],
+            "body-md": ["Nunito Sans"],
+            "body-sm": ["Nunito Sans"]
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- React Libraries -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/history@5/umd/history.development.js"></script>
+  <script src="https://unpkg.com/react-router@6.3.0/umd/react-router.development.js"></script>
+  <script src="https://unpkg.com/react-router-dom@6.3.0/umd/react-router-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+</head>
+<body class="bg-background font-body-md text-on-surface antialiased">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    const { createRoot } = ReactDOM;
+    const { MemoryRouter, Routes, Route, Link, useNavigate, useLocation } = ReactRouterDOM;
+
+    // --- SHARED SHELL COMPONENTS ---
+    function NavigationSidebar({ role = 'learner' }) {
+      const location = useLocation();
+      const current = location.pathname;
+
+      if (role === 'tutor') {
+        return (
+          <aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-hidden">
+            <div class="flex flex-col flex-1 overflow-y-auto">
+              <div class="p-6 flex flex-col gap-1">
+                <div class="flex items-center gap-2">
+                  <div class="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-sm">
+                    <span class="material-symbols-outlined text-on-primary text-[22px]">extension</span>
+                  </div>
+                  <div class="flex flex-col">
+                    <span class="font-headline-md text-headline-md text-on-surface leading-none tracking-tight">LEGO</span>
+                    <span class="font-label-sm text-label-sm text-outline tracking-wider uppercase">Learn &amp; Go</span>
+                  </div>
+                </div>
+                <div class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-low border border-outline-variant w-fit">
+                  <span class="w-2 h-2 rounded-full bg-primary-container"></span>
+                  <span class="font-label-sm text-label-sm text-primary uppercase tracking-wider font-bold">TUTOR WORKSPACE</span>
+                </div>
+              </div>
+              <nav class="px-4 flex flex-col gap-1">
+                <Link to="/tutor-dashboard" class={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${current === '/tutor-dashboard' ? 'bg-surface-container text-primary font-bold shadow-sm' : 'text-on-surface-variant font-label-md hover:bg-surface-container hover:text-on-surface'}`}>
+                  <span class="material-symbols-outlined text-[20px]">home</span>
+                  <span>Dashboard</span>
+                </Link>
+                <Link to="/tutor-sessions" class={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${current === '/tutor-sessions' ? 'bg-surface-container text-primary font-bold shadow-sm' : 'text-on-surface-variant font-label-md hover:bg-surface-container hover:text-on-surface'}`}>
+                  <span class="material-symbols-outlined text-[20px]">calendar_today</span>
+                  <span>Sessions</span>
+                </Link>
+                <Link to="/tutor-learners" class={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${current === '/tutor-learners' ? 'bg-surface-container text-primary font-bold shadow-sm' : 'text-on-surface-variant font-label-md hover:bg-surface-container hover:text-on-surface'}`}>
+                  <span class="material-symbols-outlined text-[20px]">group</span>
+                  <span>Learners</span>
+                </Link>
+                <div class="my-2 border-t border-surface-container"></div>
+                <Link to="/" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-primary font-label-md hover:bg-surface-container transition-all">
+                  <span class="material-symbols-outlined text-[20px]">school</span>
+                  <span>Switch to Learner Desk</span>
+                </Link>
+              </nav>
+            </div>
+            <div class="p-4 m-4 rounded-xl bg-surface-container-low flex flex-col gap-2">
+              <div class="flex items-center gap-2">
+                <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center shadow-inner">
+                  <span class="material-symbols-outlined text-on-primary text-[20px]">person</span>
+                </div>
+                <div class="flex flex-col min-w-0">
+                  <span class="font-label-md text-on-surface truncate">Marcus Vance</span>
+                  <span class="font-body-sm text-on-surface-variant truncate">Python Mentor</span>
+                </div>
+              </div>
+              <div class="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-surface-container-lowest">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-primary-container ring-2 ring-primary-fixed"></span>
+                  <span class="font-label-sm text-on-surface">Online</span>
+                </div>
+                <span class="material-symbols-outlined text-primary text-[18px]">toggle_on</span>
+              </div>
+            </div>
+          </aside>
+        );
+      }
+
+      return (
+        <aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-lowest z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+          <div class="flex flex-col">
+            <div class="h-16 px-6 flex items-center gap-2">
+              <div class="w-9 h-9 rounded-xl bg-primary-container flex items-center justify-center">
+                <span class="material-symbols-outlined text-on-primary text-[22px]">terminal</span>
+              </div>
+              <div class="flex flex-col leading-none">
+                <span class="font-label-lg text-primary tracking-tight font-extrabold uppercase">LEGO</span>
+                <span class="font-label-sm text-on-surface-variant font-bold tracking-wide">Learn And Go</span>
+              </div>
+            </div>
+            <div class="px-4 py-2">
+              <div class="px-4 py-1 bg-surface-container rounded-full flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-primary-container"></span>
+                <span class="font-label-sm uppercase tracking-wider text-on-surface-variant font-bold">Learner Desk</span>
+              </div>
+            </div>
+            <nav class="flex flex-col gap-1 px-4 py-2">
+              <Link to="/" class={`flex items-center gap-4 px-4 py-2 rounded-xl transition-all ${current === '/' ? 'bg-surface-container-high text-primary font-bold shadow-[0_2px_0_0_#22c55e]' : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md'}`}>
+                <span class="material-symbols-outlined text-[20px]">home</span>
+                <span>Path</span>
+              </Link>
+              <Link to="/library" class={`flex items-center gap-4 px-4 py-2 rounded-xl transition-all ${current === '/library' ? 'bg-surface-container-high text-primary font-bold shadow-[0_2px_0_0_#22c55e]' : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md'}`}>
+                <span class="material-symbols-outlined text-[20px]">menu_book</span>
+                <span>Library</span>
+              </Link>
+              <Link to="/classes" class={`flex items-center gap-4 px-4 py-2 rounded-xl transition-all ${current === '/classes' ? 'bg-surface-container-high text-primary font-bold shadow-[0_2px_0_0_#22c55e]' : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md'}`}>
+                <span class="material-symbols-outlined text-[20px]">groups</span>
+                <span>Class</span>
+              </Link>
+              <Link to="/friends" class={`flex items-center gap-4 px-4 py-2 rounded-xl transition-all ${current === '/friends' ? 'bg-surface-container-high text-primary font-bold shadow-[0_2px_0_0_#22c55e]' : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md'}`}>
+                <span class="material-symbols-outlined text-[20px]">diversity_3</span>
+                <span>Friends</span>
+              </Link>
+              <div class="my-2 border-t border-surface-container"></div>
+              <Link to="/tutor-dashboard" class="flex items-center gap-4 px-4 py-2 rounded-xl text-secondary font-label-md hover:bg-surface-container-low transition-all">
+                <span class="material-symbols-outlined text-[20px]">supervised_user_circle</span>
+                <span>Tutor Portal</span>
+              </Link>
+            </nav>
+          </div>
+          <div class="flex flex-col gap-1 px-4 pb-6">
+            <Link to="/settings" class="flex items-center gap-4 px-4 py-2 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all font-label-md">
+              <span class="material-symbols-outlined text-[20px]">settings</span>
+              <span>Settings</span>
+            </Link>
+          </div>
+        </aside>
+      );
+    }
+
+    function TopHeader({ role = 'learner' }) {
+      return (
+        <header class={`fixed top-0 ${role === 'tutor' ? 'left-72' : 'left-64'} right-0 h-16 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-6`}>
+          <div class="flex items-center gap-4">
+            <button class="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-colors" type="button">
+              <span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
+              <span class="font-label-md text-on-surface">Python Fundamentals</span>
+              <span class="material-symbols-outlined text-on-surface-variant text-[18px]">arrow_drop_down</span>
+            </button>
+          </div>
+          <div class="flex items-center gap-6">
+            <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-on-surface font-label-md">
+                <span class="text-secondary-container">🔥</span>
+                <span>7</span>
+              </div>
+              <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-on-surface font-label-md">
+                <span class="text-tertiary-container">⚡</span>
+                <span>1,420</span>
+              </div>
+              <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-on-surface font-label-md">
+                <span class="text-error">❤️</span>
+                <span>5</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="flex flex-col text-right">
+                <span class="font-label-md text-on-surface leading-tight">Alex Morgan</span>
+                <div class="flex items-center justify-end gap-1">
+                  <span class="font-label-sm text-primary font-extrabold">LVL 8</span>
+                  <span class="font-label-sm text-on-surface-variant">•</span>
+                  <span class="font-label-sm text-on-surface-variant uppercase tracking-wider font-bold">LEARNER</span>
+                </div>
+              </div>
+              <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary">
+                <span class="material-symbols-outlined text-[18px]">person</span>
+              </div>
+            </div>
+          </div>
+        </header>
+      );
+    }
+
+    // --- SCREEN 1: LEARNING PATH (HOME) ---
+    function LearningPathPage() {
+      const navigate = useNavigate();
+
+      return (
+        <div class="pl-64">
+          <NavigationSidebar role="learner" />
+          <TopHeader role="learner" />
+          <main class="relative pt-16 min-h-screen bg-background w-full px-6 py-6">
+            <div class="flex flex-col w-full">
+              {/* Banner */}
+              <section class="w-full mb-6">
+                <div class="relative bg-surface-container-lowest rounded-xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden">
+                  <div class="flex items-center gap-6 z-10">
+                    <div class="relative w-20 h-20 rounded-xl bg-surface-container flex-shrink-0 flex items-center justify-center overflow-hidden shadow-inner">
+                      <img alt="LEGO Mascot" class="w-16 h-16 object-contain filter drop-shadow hover:scale-105 transition-transform" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWV4RXFVwUrufuitVHqtr-zepg6t6Oii-5OEj5zVojNC_ETVCpMigPRz-OSywOXCuld8K0HbDCKJ3_xsTy_rEGJthlmJdw507l4yrEC7Jnfvk9plLf75886m9d0e-QL_-uCnBzJw3IgsUoQY2s6ggF244nO0f4BBiChBgIjPW-jOstk0VJTajeo4DooP9uSEKiZsx8egLHozfns-0P2AVCtSt3uwATiA2LeBWppNYDbyhFjdV-grWXK4HcmpsFNc06dA"/>
+                      <span class="absolute top-1 right-1 flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-container opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-primary-container"></span>
+                      </span>
+                    </div>
+                    <div class="flex flex-col">
+                      <div class="flex items-center gap-2 mb-1">
+                        <span class="font-label-sm text-primary uppercase tracking-wider bg-surface-container-high px-2 py-0.5 rounded-full font-extrabold">Course in Progress</span>
+                        <span class="font-label-sm text-on-surface-variant font-bold">• Unit 1</span>
+                      </div>
+                      <h1 class="font-headline-md text-on-surface leading-snug">
+                        Good morning, Alex! Ready for today's lesson?
+                      </h1>
+                      <p class="font-body-sm text-on-surface-variant">
+                        Keep your momentum going! Complete Node 3 to reach your daily goal.
+                      </p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-4 z-10 flex-shrink-0">
+                    <div class="flex flex-col items-center bg-surface-container px-4 py-1.5 rounded-xl text-center min-w-[76px]">
+                      <span class="text-secondary-container text-lg">🔥</span>
+                      <span class="font-label-lg text-on-surface leading-tight">7 Days</span>
+                      <span class="font-label-sm text-on-surface-variant uppercase">Streak</span>
+                    </div>
+                    <div class="flex flex-col items-center bg-surface-container px-4 py-1.5 rounded-xl text-center min-w-[76px]">
+                      <span class="text-tertiary-container text-lg">⚡</span>
+                      <span class="font-label-lg text-on-surface leading-tight">1,420</span>
+                      <span class="font-label-sm text-on-surface-variant uppercase">Level 8</span>
+                    </div>
+                    <div class="flex flex-col items-center bg-surface-container px-4 py-1.5 rounded-xl text-center min-w-[76px]">
+                      <span class="text-error text-lg">❤️</span>
+                      <span class="font-label-lg text-on-surface leading-tight">5 / 5</span>
+                      <span class="font-label-sm text-on-surface-variant uppercase">Full</span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Split Content */}
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full items-start">
+                <div class="lg:col-span-8 flex flex-col gap-6">
+                  {/* Hero Next Challenge */}
+                  <div class="relative bg-surface-container-lowest rounded-xl p-6 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-6 overflow-hidden">
+                    <div class="flex flex-col gap-1 max-w-xl z-10">
+                      <div class="flex items-center gap-2 mb-1">
+                        <span class="bg-primary-container text-on-primary font-label-sm px-2.5 py-0.5 rounded-full uppercase tracking-wider font-extrabold flex items-center gap-1">
+                          <span class="material-symbols-outlined text-[14px]">play_circle</span> Next Challenge
+                        </span>
+                        <span class="font-label-sm text-on-surface-variant uppercase font-bold">Unit 1 • Lesson 3</span>
+                      </div>
+                      <h2 class="font-headline-md text-on-surface">
+                        Variables, Strings &amp; Types
+                      </h2>
+                      <p class="font-body-md text-on-surface-variant">
+                        Learn how variables store and organize information in memory. Build interactive console outputs.
+                      </p>
+                      <div class="w-full mt-2 flex flex-col gap-1.5">
+                        <div class="flex justify-between items-center text-on-surface">
+                          <span class="font-label-sm text-on-surface-variant font-bold">Progress</span>
+                          <span class="font-label-md font-extrabold text-primary">3 / 5 activities</span>
+                        </div>
+                        <div class="w-full h-3 bg-surface-container rounded-full overflow-hidden flex">
+                          <div class="h-full bg-primary-container rounded-full w-[60%]"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="z-10 flex flex-col items-center w-full md:w-auto">
+                      <button 
+                        onClick={() => navigate('/lesson-preview')} 
+                        class="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-primary-container text-on-primary font-label-lg uppercase tracking-wider shadow-lg active:translate-y-[2px] transition-all hover:bg-primary"
+                      >
+                        <span>Continue Learning</span>
+                        <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+                      </button>
+                      <div class="flex items-center gap-1 mt-2 text-secondary font-label-sm">
+                        <span class="material-symbols-outlined text-[16px]">stars</span>
+                        <span>+20 XP Reward on Finish</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Serpentine Progress Track */}
+                  <div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm flex flex-col items-center relative overflow-hidden">
+                    <div class="w-full flex items-center justify-between pb-4 mb-6">
+                      <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center text-primary font-headline-md">
+                          <span class="material-symbols-outlined text-[28px]">data_object</span>
+                        </div>
+                        <div>
+                          <span class="font-label-sm text-primary uppercase font-bold tracking-wider">Unit 1</span>
+                          <h3 class="font-headline-md text-on-surface">Variables &amp; Data Types</h3>
+                        </div>
+                      </div>
+                      <span class="font-label-sm bg-surface-container px-3 py-1 rounded-full text-on-surface-variant font-bold">2 of 4 Completed</span>
+                    </div>
+
+                    <div class="relative w-full max-w-md py-4 flex flex-col items-center">
+                      <svg class="absolute top-8 left-1/2 -translate-x-1/2 w-48 h-[580px] pointer-events-none z-0" fill="none" viewBox="0 0 160 580">
+                        <path d="M 80 40 Q 30 110 40 180" fill="none" stroke="#22c55e" strokeLinecap="round" strokeWidth="8"></path>
+                        <path d="M 40 180 Q 50 250 120 300" fill="none" stroke="#22c55e" strokeLinecap="round" strokeWidth="8"></path>
+                        <path d="M 120 300 Q 150 370 70 420" fill="none" stroke="#dae2fd" strokeDasharray="8 8" strokeLinecap="round" strokeWidth="8"></path>
+                        <path d="M 70 420 Q 20 480 80 540" fill="none" stroke="#dae2fd" strokeDasharray="8 8" strokeLinecap="round" strokeWidth="8"></path>
+                      </svg>
+
+                      {/* Node 1 */}
+                      <div class="flex flex-col items-center z-10 mb-16 -translate-x-10 group cursor-pointer" onClick={() => navigate('/lesson-preview')}>
+                        <div class="w-16 h-16 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-md hover:scale-105 active:translate-y-[2px] transition-transform">
+                          <span class="material-symbols-outlined text-[30px]">check_circle</span>
+                        </div>
+                        <span class="font-label-md text-on-surface mt-1">1. Hello Python</span>
+                      </div>
+
+                      {/* Node 2 */}
+                      <div class="flex flex-col items-center z-10 mb-16 translate-x-12 group cursor-pointer" onClick={() => navigate('/lesson-preview')}>
+                        <div class="w-16 h-16 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-md hover:scale-105 active:translate-y-[2px] transition-transform">
+                          <span class="material-symbols-outlined text-[30px]">check_circle</span>
+                        </div>
+                        <span class="font-label-md text-on-surface mt-1">2. Basic Operations</span>
+                      </div>
+
+                      {/* Node 3 (Active) */}
+                      <div class="relative flex flex-col items-center z-20 mb-16 -translate-x-6">
+                        <div class="relative flex items-center justify-center">
+                          <span class="animate-ping absolute inline-flex h-24 w-24 rounded-full bg-primary-container/30 opacity-75"></span>
+                          <button onClick={() => navigate('/lesson-quiz')} class="w-20 h-20 rounded-full bg-primary-container text-on-primary flex flex-col items-center justify-center shadow-xl hover:scale-105 active:translate-y-[2px] transition-all cursor-pointer">
+                            <span class="material-symbols-outlined text-[36px]">play_arrow</span>
+                          </button>
+                        </div>
+                        <div class="bg-primary text-on-primary px-3 py-1 rounded-full font-label-sm uppercase font-extrabold mt-3 shadow-sm">
+                          START HERE
+                        </div>
+                        <span class="font-label-lg text-primary font-extrabold mt-1">3. Variables &amp; Types</span>
+                      </div>
+
+                      {/* Node 4 (Locked) */}
+                      <div class="flex flex-col items-center z-10 mb-14 translate-x-10 opacity-70">
+                        <div class="w-16 h-16 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center shadow-inner">
+                          <span class="material-symbols-outlined text-[26px]">lock</span>
+                        </div>
+                        <span class="font-label-md text-on-surface-variant mt-2">4. Type Conversions</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sidebar Stats */}
+                <div class="lg:col-span-4 flex flex-col gap-6">
+                  {/* Daily Goal */}
+                  <div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm flex flex-col gap-2">
+                    <div class="flex items-center justify-between">
+                      <h4 class="font-label-lg text-on-surface">Daily Goal</h4>
+                      <span class="font-label-sm bg-secondary-fixed text-on-secondary-fixed px-2 py-0.5 rounded-full font-bold">32 / 50 XP</span>
+                    </div>
+                    <p class="font-body-sm text-on-surface-variant">
+                      Earn 18 more XP today to maintain your daily streak target!
+                    </p>
+                    <div class="w-full h-4 bg-surface-container rounded-full overflow-hidden flex my-1">
+                      <div class="h-full bg-secondary-container rounded-full w-[64%]"></div>
+                    </div>
+                  </div>
+
+                  {/* League Peek */}
+                  <div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm flex flex-col gap-2">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-[24px]">shield</span>
+                        <h4 class="font-label-lg text-on-surface">Emerald League</h4>
+                      </div>
+                      <span class="font-label-sm text-primary uppercase font-extrabold bg-surface-container-high px-2 py-0.5 rounded-full">Top 5</span>
+                    </div>
+                    <div class="flex items-center justify-between p-2 bg-surface-container rounded-xl mt-1">
+                      <div class="flex items-center gap-2">
+                        <span class="font-headline-md text-primary font-extrabold w-6 text-center">4</span>
+                        <div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center">
+                          <span class="material-symbols-outlined text-[18px]">person</span>
+                        </div>
+                        <div class="flex flex-col">
+                          <span class="font-label-md text-on-surface font-bold">Alex Morgan (You)</span>
+                          <span class="font-label-sm text-primary font-bold">Promotion Zone ↗</span>
+                        </div>
+                      </div>
+                      <span class="font-label-md text-on-surface font-extrabold">+240 XP</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    // --- SCREEN 2: CLASSES & MENTORSHIP ---
+    function ClassesPage() {
+      const [tab, setTab] = useState('upcoming');
+      const [modalOpen, setModalOpen] = useState(false);
+
+      return (
+        <div class="pl-64">
+          <NavigationSidebar role="learner" />
+          <TopHeader role="learner" />
+          <main class="relative pt-16 min-h-screen bg-background w-full px-6 py-6">
+            <div class="flex flex-col w-full max-w-7xl mx-auto pb-10 gap-6">
+              {/* Hero */}
+              <div class="relative bg-surface-container-low rounded-3xl p-6 overflow-hidden shadow-sm">
+                <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                  <div class="flex flex-col max-w-2xl">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="px-3 py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm uppercase tracking-wider">Live Mentorship</span>
+                      <span class="text-on-surface-variant font-label-sm uppercase tracking-wide">WebRTC Encrypted</span>
+                    </div>
+                    <h1 class="font-headline-lg text-on-surface tracking-tight font-extrabold">My Classes</h1>
+                    <p class="font-body-md text-on-surface-variant mt-1">Connect 1-on-1 with vetted engineers and senior mentors via secure in-browser Jitsi video &amp; Monaco code sharing.</p>
+                  </div>
+                  <div class="flex items-center gap-4 bg-surface-container-lowest p-4 rounded-2xl shadow-sm self-stretch md:self-auto min-w-[280px]">
+                    <div class="w-16 h-16 bg-secondary-fixed rounded-xl flex items-center justify-center">
+                      <span class="text-3xl">🤖</span>
+                    </div>
+                    <div class="flex flex-col">
+                      <span class="font-label-md text-on-surface">Bitly the Bot</span>
+                      <span class="font-body-sm text-primary font-bold leading-tight">"Your review session starts shortly! You've got this!"</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tabs Switcher */}
+              <div class="flex items-center gap-2 bg-surface-container-low p-1.5 rounded-2xl w-fit">
+                <button 
+                  onClick={() => setTab('upcoming')}
+                  class={`px-6 py-2 rounded-xl font-label-md transition-all flex items-center gap-2 ${tab === 'upcoming' ? 'bg-surface-container-lowest text-on-surface shadow-sm' : 'text-on-surface-variant'}`}
+                >
+                  <span class="material-symbols-outlined text-[18px] text-primary">schedule</span>
+                  <span>Upcoming Classes</span>
+                  <span class="w-5 h-5 rounded-full bg-primary-container text-on-primary text-[11px] font-extrabold flex items-center justify-center">1</span>
+                </button>
+                <button 
+                  onClick={() => setTab('book')}
+                  class={`px-6 py-2 rounded-xl font-label-md transition-all flex items-center gap-2 ${tab === 'book' ? 'bg-surface-container-lowest text-on-surface shadow-sm' : 'text-on-surface-variant'}`}
+                >
+                  <span class="material-symbols-outlined text-[18px]">calendar_add_on</span>
+                  <span>Book a Class</span>
+                </button>
+                <button 
+                  onClick={() => setTab('past')}
+                  class={`px-6 py-2 rounded-xl font-label-md transition-all flex items-center gap-2 ${tab === 'past' ? 'bg-surface-container-lowest text-on-surface shadow-sm' : 'text-on-surface-variant'}`}
+                >
+                  <span class="material-symbols-outlined text-[18px]">history_edu</span>
+                  <span>Past Classes &amp; Notes</span>
+                </button>
+              </div>
+
+              {/* Panel 1: Upcoming */}
+              {tab === 'upcoming' && (
+                <div class="flex flex-col gap-6">
+                  <div class="relative bg-surface-container-lowest rounded-3xl p-6 shadow-md overflow-hidden">
+                    <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                      <div class="flex items-start gap-4 max-w-3xl">
+                        <img class="w-20 h-20 rounded-2xl object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbJn5hjdlvWNstA9LDv14zZWxKPAgAGfBkWnsByvPEsZxaqaSa4C1CehksnDb2Z1JAIIRqg83Ubbpe0iq_0VK_g1WtD0pNI2NeH_T4VY2jcEN9zJmXpXqPwRZxOeF4Z8rPAgeQu7koPp9ImOzkrJdCHJ0SBR85NbjPuyOt0dGlFxm47taSLdB_jwM6TMOM4Y_R6ryQ_kvRVbnjeqKahNKSnATDt_we8KX6kDsoyBihShkaxJCKsz3V"/>
+                        <div class="flex flex-col">
+                          <div class="flex flex-wrap items-center gap-2 mb-1">
+                            <span class="px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm font-extrabold uppercase">
+                              Starts in 12 mins
+                            </span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm">30 Min Deep-Dive</span>
+                          </div>
+                          <h2 class="font-headline-md text-on-surface font-extrabold">Python Debugging &amp; List Comprehension</h2>
+                          <div class="flex items-center gap-2 mt-1 text-on-surface-variant font-body-sm">
+                            <span>Sarah Jenkins (Staff Python Tutor)</span>
+                            <span>•</span>
+                            <span>Today, 3:30 PM EST</span>
+                          </div>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => setModalOpen(true)}
+                        class="px-6 py-3 rounded-2xl bg-primary hover:bg-primary-container text-on-primary font-label-lg uppercase tracking-wider font-extrabold shadow-lg transition-all flex items-center justify-center gap-2"
+                      >
+                        <span class="material-symbols-outlined text-[24px]">videocam</span>
+                        <span>Join Jitsi Class Room</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Panel 2: Book */}
+              {tab === 'book' && (
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div class="bg-surface-container-lowest rounded-3xl p-6 shadow-sm flex flex-col justify-between">
+                    <div>
+                      <h4 class="font-headline-md text-on-surface font-extrabold">Marcus Chen</h4>
+                      <span class="font-label-sm text-primary font-bold uppercase tracking-wider">Ex-AWS Staff Engineer</span>
+                      <p class="font-body-sm text-on-surface-variant mt-2">Senior Python &amp; Django architect specializing in distributed microservices.</p>
+                    </div>
+                    <button onClick={() => alert('Booked Marcus Chen!')} class="mt-4 w-full py-2.5 rounded-xl bg-primary text-on-primary font-label-md font-bold uppercase tracking-wider shadow">
+                      Book Session ($20 USD)
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Panel 3: Past */}
+              {tab === 'past' && (
+                <div class="bg-surface-container-lowest rounded-3xl p-6 shadow-sm flex flex-col gap-4">
+                  <h4 class="font-headline-md text-on-surface font-extrabold">Lists &amp; Loops Walkthrough with Marcus Chen</h4>
+                  <p class="font-body-sm text-on-surface-variant">Key Topics: O(N) complexity reduction, list comprehension refactoring.</p>
+                  <pre class="bg-inverse-surface text-inverse-on-surface p-4 rounded-xl font-mono text-sm">
+{`def filter_active_learners(users):
+    return [user["username"] for user in users if user.get("xp", 0) >= 1000]`}
+                  </pre>
+                </div>
+              )}
+
+              {/* Overlay Modal */}
+              {modalOpen && (
+                <div class="fixed inset-0 bg-inverse-surface/80 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+                  <div class="bg-surface-container-lowest max-w-lg w-full rounded-3xl p-6 shadow-2xl flex flex-col items-center text-center gap-4">
+                    <div class="w-20 h-20 rounded-3xl bg-primary-container text-on-primary flex items-center justify-center">
+                      <span class="material-symbols-outlined text-[40px]">sensors</span>
+                    </div>
+                    <h3 class="font-headline-md text-on-surface font-extrabold">Connecting to Sarah Jenkins...</h3>
+                    <p class="font-body-sm text-on-surface-variant">Provisioning WebRTC video bridge &amp; Monaco code session.</p>
+                    <div class="flex gap-4 w-full mt-2">
+                      <button onClick={() => setModalOpen(false)} class="flex-1 py-2.5 rounded-xl bg-surface-container text-on-surface font-label-md font-bold">Cancel</button>
+                      <button onClick={() => { alert('Connected to classroom simulation!'); setModalOpen(false); }} class="flex-1 py-2.5 rounded-xl bg-primary text-on-primary font-label-md font-bold shadow">Enter Room</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    // --- SCREEN 3: FRIENDS & SOCIAL ---
+    function FriendsPage() {
+      const [friends, setFriends] = useState([
+        { id: 1, name: 'Sarah Khan', lvl: 9, xp: '1,890 XP', status: 'Online' },
+        { id: 2, name: 'Devon Vance', lvl: 8, xp: '1,350 XP', status: 'Last active 2h ago' },
+        { id: 3, name: 'Samantha Wu', lvl: 7, xp: '940 XP', status: 'Online' }
+      ]);
+      const [copied, setCopied] = useState(false);
+
+      return (
+        <div class="pl-64">
+          <NavigationSidebar role="learner" />
+          <TopHeader role="learner" />
+          <main class="relative pt-16 min-h-screen bg-background w-full px-6 py-6">
+            <div class="flex flex-col w-full">
+              <div class="flex flex-col lg:flex-row justify-between gap-6 mb-6">
+                <div>
+                  <h1 class="font-headline-xl text-on-surface tracking-tight">Friends &amp; Social Learning</h1>
+                  <p class="font-body-lg text-on-surface-variant">Learn together. Stay motivated together.</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <div class="lg:col-span-7 flex flex-col gap-6">
+                  <section class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+                    <h2 class="font-headline-md text-on-surface">My Friends Directory</h2>
+                    <div class="flex flex-col gap-3">
+                      {friends.map(friend => (
+                        <div key={friend.id} class="flex items-center justify-between p-4 bg-surface-container-low rounded-2xl">
+                          <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold">
+                              {friend.name.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            <div class="flex flex-col">
+                              <span class="font-label-lg text-on-surface font-extrabold">{friend.name}</span>
+                              <span class="font-body-sm text-on-surface-variant">LVL {friend.lvl} • {friend.xp}</span>
+                            </div>
+                          </div>
+                          <button onClick={() => alert(`Cheered for ${friend.name}!`)} class="px-4 py-1.5 rounded-xl bg-surface-container-lowest text-primary font-label-md shadow-sm">
+                            High Five 🙌
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                </div>
+
+                <div class="lg:col-span-5 flex flex-col gap-6">
+                  <div class="bg-surface-container-lowest rounded-3xl p-6 shadow-md flex flex-col gap-4">
+                    <h4 class="font-label-lg text-on-surface">Share Personal Invite Link</h4>
+                    <div class="flex items-center justify-between bg-surface-container-low p-2 rounded-xl">
+                      <span class="font-mono text-sm text-on-surface truncate">lego.app/invite/alexcodes</span>
+                      <button 
+                        onClick={() => { setCopied(true); setTimeout(() => setCopied(false), 2000); }} 
+                        class="px-4 py-1 bg-primary text-on-primary rounded-lg font-label-sm"
+                      >
+                        {copied ? 'Copied!' : 'Copy'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    // --- SCREEN 4: LESSON PREVIEW ---
+    function LessonPreviewPage() {
+      const navigate = useNavigate();
+      const [checked, setChecked] = useState([true, false, false, false]);
+
+      const toggleCheck = (idx) => {
+        const next = [...checked];
+        next[idx] = !next[idx];
+        setChecked(next);
+      };
+
+      return (
+        <div class="pl-64">
+          <NavigationSidebar role="learner" />
+          <TopHeader role="learner" />
+          <main class="w-full pt-16 bg-background min-h-screen">
+            <div class="w-full px-6 py-6 flex flex-col gap-6 max-w-6xl mx-auto">
+              <button onClick={() => navigate('/')} class="inline-flex items-center gap-1 text-on-surface-variant hover:text-primary font-label-md w-fit">
+                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                <span>Return to Learning Path</span>
+              </button>
+
+              <div class="bg-surface-container-lowest rounded-3xl p-6 shadow-xl flex flex-col md:flex-row justify-between items-center gap-6">
+                <div>
+                  <span class="px-3 py-0.5 rounded-lg bg-primary-container/20 text-primary font-label-sm uppercase">Unit 1: Lesson 3</span>
+                  <h1 class="font-headline-xl text-on-surface mt-1">Variables, Strings &amp; Types</h1>
+                  <p class="font-body-lg text-on-surface-variant max-w-xl mt-2">
+                    Learn how variables store and organize computer memory and dynamic type inference with code examples.
+                  </p>
+                </div>
+                <button 
+                  onClick={() => navigate('/lesson-quiz')} 
+                  class="px-8 py-3.5 rounded-2xl bg-primary-container text-on-primary font-headline-md shadow-lg hover:brightness-105 active:translate-y-1 transition-all"
+                >
+                  Start Lesson (+20 XP)
+                </button>
+              </div>
+
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <div class="lg:col-span-7 bg-surface-container-lowest p-4 rounded-3xl shadow-md">
+                  <div class="w-full aspect-video rounded-2xl bg-surface-container-highest flex items-center justify-center cursor-pointer relative overflow-hidden" onClick={() => navigate('/lesson-quiz')}>
+                    <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBR3PFo-Mu1DiGQTiuvVgIAD_FVvOHLWkF28sa3Ad4weq4UpqWTAZxhySPZbqdwQCH9q3zoSTzjYFbQ3CNUQhsvlRArl-dXzwI2ZAO7qzpHhQNCtsqIGfYAGDbIsCdNe8jCkI24h7q1ZUhQ9Cy1GK5HBm_Up6AX1tV8jCzBYUBpJ_l4TD_QsGLdjskcf_a89wTRgh_6f9ICEU0crIkl46N81dDxKBMI2wK0k1n4jqBvVyH6DMIZhdzA"/>
+                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <div class="w-16 h-16 rounded-2xl bg-primary-container text-on-primary flex items-center justify-center shadow-xl">
+                        <span class="material-symbols-outlined text-[40px]">play_arrow</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="lg:col-span-5 bg-surface-container-lowest p-6 rounded-3xl shadow-md flex flex-col gap-4">
+                  <h2 class="font-headline-md text-on-surface">Learning Objectives</h2>
+                  <div class="flex flex-col gap-3">
+                    {['Variable declaration & naming', 'String concatenation & formatting', 'Integer vs float operations', 'Complete quiz challenge'].map((text, i) => (
+                      <div key={i} onClick={() => toggleCheck(i)} class="flex items-center gap-3 p-3 bg-surface-container-low rounded-xl cursor-pointer">
+                        <span class={`material-symbols-outlined text-[20px] ${checked[i] ? 'text-primary' : 'text-outline-variant'}`}>
+                          {checked[i] ? 'check_circle' : 'radio_button_unchecked'}
+                        </span>
+                        <span class="font-label-md text-on-surface">{text}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    // --- SCREEN 5: CONTENT LIBRARY ---
+    function ContentLibraryPage() {
+      const navigate = useNavigate();
+
+      return (
+        <div class="pl-64">
+          <NavigationSidebar role="learner" />
+          <TopHeader role="learner" />
+          <main class="w-full pt-16 bg-background min-h-screen">
+            <div class="max-w-6xl mx-auto w-full px-6 py-8 flex flex-col gap-6">
+              <div class="bg-surface-container-lowest rounded-3xl p-8 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div>
+                  <span class="px-3 py-1 rounded-full bg-primary-container/20 text-primary font-label-sm font-bold uppercase">Beginner Track</span>
+                  <h1 class="font-headline-xl text-on-surface mt-2">Python Fundamentals</h1>
+                  <p class="font-body-lg text-on-surface-variant mt-1 max-w-xl">Master programming fundamentals from scratch with interactive brick challenges.</p>
+                </div>
+                <button onClick={() => navigate('/lesson-preview')} class="px-6 py-3 rounded-2xl bg-primary text-on-primary font-headline-md shadow-md">
+                  Continue Course
+                </button>
+              </div>
+
+              <div class="flex flex-col gap-4">
+                <h2 class="font-headline-lg text-on-surface">Curriculum Units</h2>
+                <div class="p-6 bg-surface-container-lowest rounded-2xl shadow-sm flex justify-between items-center cursor-pointer" onClick={() => navigate('/lesson-preview')}>
+                  <div>
+                    <span class="font-label-sm text-primary uppercase font-bold">Unit 1</span>
+                    <h3 class="font-headline-md text-on-surface">Python Basics &amp; Syntax</h3>
+                    <span class="font-body-sm text-on-surface-variant">4 lessons • 100% completed</span>
+                  </div>
+                  <span class="material-symbols-outlined text-primary text-[28px]">check_circle</span>
+                </div>
+                <div class="p-6 bg-surface-container-lowest rounded-2xl shadow-md border border-primary-container flex justify-between items-center cursor-pointer" onClick={() => navigate('/lesson-preview')}>
+                  <div>
+                    <span class="font-label-sm text-secondary-container uppercase font-bold">Unit 2 • Current Mission</span>
+                    <h3 class="font-headline-md text-on-surface">Variables &amp; Data Types</h3>
+                    <span class="font-body-sm text-on-surface-variant">3 of 5 lessons completed</span>
+                  </div>
+                  <span class="material-symbols-outlined text-secondary-container text-[28px]">pending</span>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    // --- SCREEN 6: QUIZ CHALLENGE ---
+    function LessonQuizPage() {
+      const navigate = useNavigate();
+      const [selected, setSelected] = useState(null);
+      const [isCorrect, setIsCorrect] = useState(false);
+
+      const handleSelect = (idx) => {
+        setSelected(idx);
+        if (idx === 1) { // String
+          setIsCorrect(true);
+        } else {
+          setIsCorrect(false);
+        }
+      };
+
+      return (
+        <div class="pl-64">
+          <NavigationSidebar role="learner" />
+          <TopHeader role="learner" />
+          <main class="w-full pt-16 bg-background min-h-screen">
+            <div class="max-w-4xl mx-auto w-full px-6 py-6 flex flex-col gap-6">
+              {/* Progress Header */}
+              <div class="w-full bg-surface-container-lowest rounded-xl p-4 shadow-md flex items-center justify-between gap-4">
+                <button onClick={() => navigate('/')} class="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center">
+                  <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+                <div class="flex-1 flex flex-col gap-1">
+                  <div class="flex justify-between font-label-sm text-on-surface-variant">
+                    <span>Question 3 of 5</span>
+                    <span class="text-primary font-bold">60% Complete</span>
+                  </div>
+                  <div class="w-full h-3 bg-surface-container rounded-full overflow-hidden">
+                    <div class="h-full bg-primary-container w-3/5"></div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1 bg-error-container px-3 py-1 rounded-full text-on-error-container">
+                  <span>❤️</span>
+                  <span class="font-bold">4</span>
+                </div>
+              </div>
+
+              {/* Main Workspace */}
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-5 flex flex-col gap-4">
+                  <div class="bg-surface-container-lowest rounded-xl p-6 shadow-md">
+                    <span class="font-label-sm text-primary uppercase font-bold">Pixel Master Leo</span>
+                    <p class="font-headline-md text-on-surface mt-2">
+                      What data type is the value <span class="text-primary font-bold">"LEGO"</span>?
+                    </p>
+                  </div>
+                  <div class="bg-inverse-surface rounded-xl p-4 font-mono text-sm text-white">
+                    <span class="text-tertiary-fixed">app_name</span> = <span class="text-secondary-fixed">"LEGO"</span><br/>
+                    print(type(app_name))
+                  </div>
+                </div>
+
+                <div class="lg:col-span-7 flex flex-col gap-3">
+                  {['Integer', 'String', 'Boolean', 'Array / List'].map((option, idx) => (
+                    <button 
+                      key={idx} 
+                      onClick={() => handleSelect(idx)}
+                      class={`w-full p-4 rounded-xl text-left shadow-sm flex items-center justify-between transition-all ${selected === idx ? 'bg-primary-container/20 border-2 border-primary text-primary font-bold' : 'bg-surface-container-lowest hover:bg-surface-container-low text-on-surface'}`}
+                    >
+                      <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center">{String.fromCharCode(65 + idx)}</span>
+                        <span>{option}</span>
+                      </div>
+                      {selected === idx && <span class="material-symbols-outlined text-primary">check_circle</span>}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Bottom Result Notification */}
+              {isCorrect && (
+                <div class="w-full bg-primary text-on-primary rounded-xl p-6 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div>
+                    <h3 class="font-headline-md">Nicely done! That's a String (str).</h3>
+                    <p class="text-primary-fixed-dim">Quotation marks indicate sequential text characters.</p>
+                  </div>
+                  <button 
+                    onClick={() => navigate('/lesson-complete')} 
+                    class="px-8 py-3 bg-surface-container-lowest text-primary font-bold rounded-xl shadow uppercase tracking-wider"
+                  >
+                    Continue
+                  </button>
+                </div>
+              )}
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    // --- SCREEN 7: LESSON COMPLETION ---
+    function LessonCompletePage() {
+      const navigate = useNavigate();
+
+      return (
+        <div class="pl-64">
+          <NavigationSidebar role="learner" />
+          <TopHeader role="learner" />
+          <main class="w-full pt-16 bg-background min-h-screen">
+            <div class="max-w-4xl mx-auto px-6 py-12 flex flex-col items-center text-center">
+              <div class="w-24 h-24 rounded-full bg-secondary-container flex items-center justify-center text-4xl mb-4 shadow-xl">
+                🎉
+              </div>
+              <h1 class="font-headline-xl text-on-surface mb-2">Lesson Complete!</h1>
+              <p class="font-body-lg text-on-surface-variant max-w-lg mb-8">
+                You mastered <span class="font-bold text-primary">Variables &amp; Data Types</span> with a flawless perfect score!
+              </p>
+
+              {/* Stats Row */}
+              <div class="w-full grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 text-left">
+                <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm">
+                  <span class="font-label-sm text-on-surface-variant uppercase">Experience</span>
+                  <div class="font-headline-lg text-tertiary mt-1">+20 XP</div>
+                </div>
+                <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm">
+                  <span class="font-label-sm text-on-surface-variant uppercase">Curriculum</span>
+                  <div class="font-headline-lg text-primary mt-1">+1 Lesson</div>
+                </div>
+                <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm">
+                  <span class="font-label-sm text-on-surface-variant uppercase">Accuracy</span>
+                  <div class="font-headline-lg text-secondary mt-1">100%</div>
+                </div>
+                <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm">
+                  <span class="font-label-sm text-on-surface-variant uppercase">Daily Streak</span>
+                  <div class="font-headline-lg text-error mt-1">7 Days</div>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-3 w-full max-w-md">
+                <button onClick={() => navigate('/')} class="w-full py-4 rounded-xl bg-primary text-on-primary font-headline-md shadow-lg hover:brightness-105 transition-all">
+                  Continue to Learning Path
+                </button>
+              </div>
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    // --- SCREEN 8: TUTOR DASHBOARD ---
+    function TutorDashboardPage() {
+      const navigate = useNavigate();
+
+      return (
+        <div class="pl-72">
+          <NavigationSidebar role="tutor" />
+          <TopHeader role="tutor" />
+          <main class="relative pt-20 w-full min-h-screen bg-background px-6 py-6">
+            <div class="max-w-[1240px] w-full mx-auto flex flex-col gap-6 pb-12">
+              <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                  <h1 class="font-headline-lg text-on-surface tracking-tight">Good morning, Marcus! 👋</h1>
+                  <p class="font-body-md text-on-surface-variant">Here is an overview of today's classes and learners.</p>
+                </div>
+                <button onClick={() => navigate('/tutor-sessions')} class="px-4 py-2 bg-primary text-on-primary rounded-xl font-label-md shadow">
+                  View Full Schedule
+                </button>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="rounded-2xl bg-surface-container-lowest p-4 shadow-sm">
+                  <span class="font-label-sm text-on-surface-variant uppercase">Upcoming Sessions</span>
+                  <div class="font-headline-xl text-on-surface mt-2">12</div>
+                </div>
+                <div class="rounded-2xl bg-surface-container-lowest p-4 shadow-sm">
+                  <span class="font-label-sm text-on-surface-variant uppercase">Pending Requests</span>
+                  <div class="font-headline-xl text-on-surface mt-2">4</div>
+                </div>
+                <div class="rounded-2xl bg-surface-container-lowest p-4 shadow-sm">
+                  <span class="font-label-sm text-on-surface-variant uppercase">Active Learners</span>
+                  <div class="font-headline-xl text-on-surface mt-2">18</div>
+                </div>
+                <div class="rounded-2xl bg-surface-container-lowest p-4 shadow-sm">
+                  <span class="font-label-sm text-on-surface-variant uppercase">Month Earnings</span>
+                  <div class="font-headline-xl text-primary mt-2">$480</div>
+                </div>
+              </div>
+
+              <div class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col gap-4">
+                <h2 class="font-headline-md text-on-surface">Today's Live Sessions</h2>
+                <div class="p-4 rounded-xl bg-surface-container-low flex justify-between items-center">
+                  <div>
+                    <h3 class="font-label-lg text-on-surface">Python Debugging with Alex Morgan</h3>
+                    <span class="font-body-sm text-on-surface-variant">09:00 AM EST • Starts soon</span>
+                  </div>
+                  <button onClick={() => navigate('/tutor-sessions')} class="px-4 py-2 rounded-xl bg-primary-container text-on-primary font-label-md shadow">
+                    Launch Room
+                  </button>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    // --- SCREEN 9: TUTOR LEARNERS LIST ---
+    function TutorLearnersPage() {
+      const [filter, setFilter] = useState('all');
+
+      const learners = [
+        { id: 1, name: 'Alex Morgan', track: 'Python Fundamentals', completion: '68%', status: 'active', accuracy: '92%' },
+        { id: 2, name: 'Sarah Khan', track: 'Fullstack Web Dev', completion: '84%', status: 'active', accuracy: '96%' },
+        { id: 3, name: 'Hamza Tariq', track: 'Python Fundamentals', completion: '41%', status: 'needs-attention', accuracy: '64%' }
+      ];
+
+      return (
+        <div class="pl-72">
+          <NavigationSidebar role="tutor" />
+          <TopHeader role="tutor" />
+          <main class="relative pt-20 w-full min-h-screen bg-background px-6 py-6">
+            <div class="max-w-[1240px] w-full mx-auto flex flex-col gap-6 pb-12">
+              <div>
+                <h1 class="font-headline-lg text-on-surface tracking-tight">My Learners</h1>
+                <p class="font-body-md text-on-surface-variant">Monitor student progression, quiz accuracy, and study streaks.</p>
+              </div>
+
+              <div class="flex gap-2">
+                {['all', 'active', 'needs-attention'].map(tag => (
+                  <button 
+                    key={tag}
+                    onClick={() => setFilter(tag)}
+                    class={`px-4 py-1.5 rounded-full font-label-sm uppercase tracking-wide transition-all ${filter === tag ? 'bg-primary text-on-primary' : 'bg-surface-container-lowest text-on-surface'}`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+
+              <div class="flex flex-col gap-4">
+                {learners.filter(l => filter === 'all' || l.status === filter).map(learner => (
+                  <div key={learner.id} class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                      <h3 class="font-headline-md text-on-surface">{learner.name}</h3>
+                      <span class="font-body-sm text-on-surface-variant">{learner.track} • Accuracy: {learner.accuracy}</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                      <span class="font-label-md text-primary font-bold">{learner.completion} Completed</span>
+                      <button onClick={() => alert(`Message sent to ${learner.name}`)} class="px-4 py-2 rounded-xl bg-surface-container text-on-surface font-label-md">
+                        Message
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    // --- SCREEN 10: TUTOR SESSIONS & WEBRTC ROOM ---
+    function TutorSessionsPage() {
+      const [connected, setConnected] = useState(false);
+
+      return (
+        <div class="pl-72">
+          <NavigationSidebar role="tutor" />
+          <TopHeader role="tutor" />
+          <main class="relative pt-20 w-full min-h-screen bg-background px-6 py-6">
+            <div class="max-w-[1360px] mx-auto flex flex-col gap-6">
+              <div>
+                <h1 class="font-headline-lg text-on-surface tracking-tight">Mentorship Sessions</h1>
+                <p class="font-body-md text-on-surface-variant">Live collaborative video room and Monaco workspace tools.</p>
+              </div>
+
+              <div class="bg-surface-container-lowest p-6 rounded-2xl shadow-md flex flex-col gap-4">
+                <div class="flex items-center justify-between">
+                  <h3 class="font-headline-md text-on-surface">Alex Morgan • Python Debugging</h3>
+                  <span class="px-3 py-1 bg-primary-fixed text-on-primary-fixed rounded-full font-label-sm">Room #LEGO-882-PYT</span>
+                </div>
+                <div class="w-full aspect-video bg-inverse-surface rounded-2xl flex flex-col items-center justify-center text-white relative">
+                  {connected ? (
+                    <div class="flex flex-col items-center gap-2">
+                      <span class="material-symbols-outlined text-[64px] text-primary-container">videocam</span>
+                      <span class="font-label-lg">Jitsi WebRTC Connection Established</span>
+                    </div>
+                  ) : (
+                    <div class="flex flex-col items-center gap-3">
+                      <span class="material-symbols-outlined text-[48px] text-outline">sensors_off</span>
+                      <span>Camera &amp; Monaco bridge standby</span>
+                      <button onClick={() => setConnected(true)} class="px-6 py-2.5 rounded-xl bg-primary-container text-on-primary font-bold shadow">
+                        Launch WebRTC Stream
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    // --- APP CONTAINER WITH MEMORY ROUTER ---
+    function App() {
+      return (
+        <MemoryRouter initialEntries={['/']}>
+          <Routes>
+            <Route path="/" element={<LearningPathPage />} />
+            <Route path="/library" element={<ContentLibraryPage />} />
+            <Route path="/classes" element={<ClassesPage />} />
+            <Route path="/friends" element={<FriendsPage />} />
+            <Route path="/lesson-preview" element={<LessonPreviewPage />} />
+            <Route path="/lesson-quiz" element={<LessonQuizPage />} />
+            <Route path="/lesson-complete" element={<LessonCompletePage />} />
+            <Route path="/tutor-dashboard" element={<TutorDashboardPage />} />
+            <Route path="/tutor-learners" element={<TutorLearnersPage />} />
+            <Route path="/tutor-sessions" element={<TutorSessionsPage />} />
+            <Route path="*" element={<LearningPathPage />} />
+          </Routes>
+        </MemoryRouter>
+      );
+    }
+
+    const root = createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
