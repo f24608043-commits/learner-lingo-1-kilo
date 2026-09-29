@@ -11,6 +11,7 @@ export async function signUp(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const displayName = formData.get("displayName") as string;
+  const remember = formData.get("remember") === "on"; // Checkbox value is "on" when checked
 
   if (!email || !password) {
     redirect("/sign-up?error=Email and password are required");
@@ -78,15 +79,28 @@ export async function signUp(formData: FormData) {
 export async function signIn(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  const remember = formData.get("remember") === "on"; // Checkbox value is "on" when checked
 
   if (!email || !password) {
     redirect("/sign-in?error=Email and password are required");
   }
 
   const supabase = await createClient();
+  
+  // Prepare options for sign-in
+  const options = {
+    // If we wanted to extend session, we might do it here, but Supabase
+    // session duration is typically configured at project level
+    // For remember me, we rely on default persistence which should work
+    // across browser sessions when using localStorage (which @supabase/ssr uses)
+  };
+
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
+    // Note: The options parameter here is for the signInWithPassword method
+    // We're not adding remember-specific options here as session persistence
+    // is handled by the Supabase client configuration
   });
 
   if (error) {

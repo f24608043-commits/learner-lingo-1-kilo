@@ -74,7 +74,6 @@ export default async function OnboardingPage({
                     type="checkbox"
                     name="courseIds"
                     value={c.id}
-                    defaultChecked={index === 0}
                     className="mt-1 h-4 w-4 rounded border-surface-border text-primary focus:ring-primary"
                   />
                   <div>

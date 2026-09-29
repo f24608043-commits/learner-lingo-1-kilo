@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
+import SessionReminders from "./SessionReminders";
 
 interface UnifiedShellProps {
   children: React.ReactNode;
@@ -82,8 +83,9 @@ export default function UnifiedShell({
       bottom: [
         { path: "/path", label: "Path", icon: "home" },
         { path: "/library", label: "Library", icon: "menu_book" },
+        { path: "/tutoring", label: "Class", icon: "groups" },
         { path: "/friends", label: "Friends", icon: "diversity_3" },
-        { path: "/leaderboard", label: "Leaderboard", icon: "leaderboard" },
+        { path: "/messages", label: "Messages", icon: "chat" },
         { path: "/profile", label: "Profile", icon: "person" },
       ],
       more: [
@@ -272,6 +274,9 @@ export default function UnifiedShell({
           </div>
 
           <div className="flex items-center gap-4 lg:gap-6">
+            {/* Session Reminders */}
+            <SessionReminders isTutor={isTutor} />
+            
             {/* Stats - Mobile: compact, Desktop: full */}
             <div className="flex items-center gap-2">
               <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full shadow-clay-secondary font-label-sm lg:font-label-md border-b-2 border-orange-600/30 ${isLearner ? 'bg-secondary text-white' : isAdmin ? 'bg-tertiary text-white' : 'bg-surface text-text-primary'}`}>

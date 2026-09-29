@@ -1,4 +1,4 @@
-import { getFriendList, getPendingRequests, acceptFriendRequest, rejectFriendRequest, removeFriend, searchLearners, sendFriendRequest } from "./actions";
+import { getFriendList, getPendingRequests, acceptFriendRequest, rejectFriendRequest, removeFriend, searchLearners, sendFriendRequest, getFriendSuggestions } from "./actions";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import Mascot from "@/components/Mascot";
@@ -27,10 +27,11 @@ export default async function FriendsPage({
     redirect("/sign-in");
   }
 
-  const [friends, pendingRequests, searchResults] = await Promise.all([
+  const [friends, pendingRequests, searchResults, friendSuggestions] = await Promise.all([
     getFriendList(),
     getPendingRequests(),
     query ? searchLearners(query) : Promise.resolve([]),
+    query ? Promise.resolve([]) : getFriendSuggestions(8),
   ]);
 
   return (
@@ -249,7 +250,49 @@ export default async function FriendsPage({
                           <span className="inline-flex items-center gap-1 text-xs text-orange-700 font-bold bg-orange-50 px-2 py-0.5 rounded-full border border-orange-200">
                             🔥 {friend.streakCount}d
                           </span>
-                        )}
+)}
+
+      {/* ── Friend Suggestions ──────────────────────────────────────── */}
+      {!query && friendSuggestions.length > 0 && (
+        <div className="mb-6 animate-slide-up delay-300">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <h2 className="font-headline-md text-text-primary font-black text-lg">
+              Suggested Friends
+            </h2>
+            <p className="font-body-xs text-text-muted">Learners you might know</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {friendSuggestions.map((learner: any, idx: number) => {
+              const gradient = AVATAR_GRADIENTS[idx % AVATAR_GRADIENTS.length];
+              return (
+                <div key={learner.id} className="p-3 rounded-2xl bg-white border border-gray-200 flex items-center justify-between gap-3 animate-pop-in" style={{ animationDelay: `${idx * 60}ms` }}>
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${gradient} text-white font-extrabold flex items-center justify-center text-sm shrink-0`}>
+                      {learner.displayName?.[0] || "?"}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-label-md font-bold text-text-primary truncate text-sm">{learner.displayName}</p>
+                      <p className="font-body-sm text-xs text-text-muted">{learner.xp || 0} XP</p>
+                    </div>
+                  </div>
+                  <form action={async () => {
+                    "use server";
+                    await sendFriendRequest(learner.id);
+                  }}>
+                    <button
+                      type="submit"
+                      className="rounded-xl bg-primary text-white px-3 py-1.5 font-label-sm font-bold text-xs shadow-sm border-b-2 border-primary-dark hover:brightness-105 active:translate-y-[1px] transition-all cursor-pointer"
+                    >
+                      + Add
+                    </button>
+                  </form>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
                       </div>
                     </div>
                   </div>

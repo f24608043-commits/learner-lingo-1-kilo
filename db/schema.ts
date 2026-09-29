@@ -326,6 +326,86 @@ export const sessionRequests = pgTable("session_requests", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// ── 17. TUTOR_ENROLLMENTS ───────────────────────────────────
+export const enrollmentStatusEnum = pgEnum("tutor_enrollment_status", [
+  "pending",
+  "enrolled",
+  "rejected",
+  "cancelled",
+]);
+
+export const tutorEnrollments = pgTable(
+  "tutor_enrollments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    learnerId: uuid("learner_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    tutorId: uuid("tutor_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    status: enrollmentStatusEnum("status").notNull().default("pending"),
+    message: text("message"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.learnerId, t.tutorId)]
+);
+
+// ── 18. GROUPS ───────────────────────────────────────────────
+export const groups = pgTable("groups", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tutorId: uuid("tutor_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ── 19. GROUP_MEMBERS ────────────────────────────────────────
+export const groupMembers = pgTable(
+  "group_members",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => groups.id, { onDelete: "cascade" }),
+    learnerId: uuid("learner_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    enrolledAt: timestamp("enrolled_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.groupId, t.learnerId)]
+);
+
+// ── 20. GROUP_SESSIONS ───────────────────────────────────────
+export const groupSessionStatusEnum = pgEnum("group_session_status", [
+  "scheduled",
+  "ongoing",
+  "completed",
+  "cancelled",
+]);
+
+export const groupSessions = pgTable("group_sessions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  groupId: uuid("group_id")
+    .notNull()
+    .references(() => groups.id, { onDelete: "cascade" }),
+  tutorId: uuid("tutor_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "cascade" }),
+  scheduledAt: timestamp("scheduled_at", { withTimezone: true }).notNull(),
+  endTime: timestamp("end_time", { withTimezone: true }),
+  status: groupSessionStatusEnum("status").notNull().default("scheduled"),
+  jitsiRoomId: text("jitsi_room_id"),
+  title: text("title"),
+  description: text("description"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // ── 17. LIBRARY_VIEWS ─────────────────────────────────────
 export const libraryViews = pgTable("library_views", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -388,7 +468,7 @@ export const conversations = pgTable(
     type: conversationTypeEnum("type").notNull().default("direct"),
     title: text("title"),
     createdBy: uuid("created_by").notNull().references(() => profiles.id, { onDelete: "cascade" }),
-    directKey: uuid("direct_key").unique(), // For direct conversations, ensures one thread per pair
+    directKey: text("direct_key").unique(), // For direct conversations, ensures one thread per pair
     lastMessageAt: timestamp("last_message_at", { withTimezone: true }),
     jitsiRoomId: text("jitsi_room_id"), // For group live class rooms
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

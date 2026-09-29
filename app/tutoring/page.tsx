@@ -1,4 +1,4 @@
-import { getTutors, getMySessions, getPendingRequests, acceptSessionRequestAction, declineSessionRequestAction, requestSessionAction, startDirectConversationAction } from "./actions";
+import { getTutors, getMySessions, getPendingRequests, acceptSessionRequestAction, declineSessionRequestAction, startDirectConversationAction, getLearnerEnrollments, requestEnrollmentAction } from "./actions";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import Mascot from "@/components/Mascot";
@@ -29,11 +29,18 @@ export default async function TutoringPage() {
     redirect("/tutoring/dashboard");
   }
 
-  const [tutors, mySessions, pendingRequests] = await Promise.all([
+  const [tutors, mySessions, pendingRequests, myEnrollments] = await Promise.all([
     getTutors(),
     getMySessions(),
-    getPendingRequests()
+    getPendingRequests(),
+    getLearnerEnrollments()
   ]);
+
+  // Create a map of enrollment status by tutorId for quick lookup
+  const enrollmentMap = new Map();
+  [...myEnrollments.pending, ...myEnrollments.enrolled, ...myEnrollments.rejected, ...myEnrollments.cancelled].forEach(enrollment => {
+    enrollmentMap.set(enrollment.tutor.tutorId, enrollment);
+  });
 
   return (
     <div className="w-full px-6 py-6 bg-gradient-to-br from-background via-blue-50 to-cyan-50 min-h-screen">
@@ -178,9 +185,9 @@ export default async function TutoringPage() {
                           Join Session
                         </a>
                       )}
-                      <MessagingWidget
+<MessagingWidget
                         otherUserId={otherUserId}
-                        otherUserName={otherUserName}
+                        otherUserName={session.tutor?.displayName || "Tutor"}
                         sessionId={session.id}
                       />
                     </div>
@@ -199,11 +206,21 @@ export default async function TutoringPage() {
           <h2 className="font-headline-md text-headline-md text-on-surface font-extrabold">Find a Tutor</h2>
         </div>
         {tutors.length === 0 ? (
-          <div className="rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 p-8 text-center shadow-xl border-4 border-white/50">
-            <div className="relative w-20 h-20 rounded-xl bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center overflow-hidden shadow-xl mx-auto mb-4 border-4 border-white/30">
-              <Mascot pose="empty" size={64} />
+          <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-purple-50 p-8 text-center shadow-xl border-4 border-blue-100">
+            <div className="relative w-20 h-20 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center overflow-hidden shadow-xl mx-auto mb-4 border-4 border-white/30">
+              <Mascot pose="thinking" size={64} />
             </div>
-            <p className="font-body-md text-text-muted font-bold">No tutors available yet.</p>
+            <h3 className="font-headline-md text-text-primary font-black mb-2">No tutors available yet</h3>
+            <p className="font-body-md text-text-muted max-w-md mx-auto mb-6">
+              Be the first tutor! Share your knowledge and help others learn.
+            </p>
+            <Link
+              href="/tutoring?become=tutor"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 font-label-md font-bold shadow-xl border-4 border-white/30 transform hover:scale-105 transition-all active:scale-95"
+            >
+              <span className="material-symbols-outlined text-[18px]">school</span>
+              Become a Tutor
+            </Link>
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -245,14 +262,67 @@ export default async function TutoringPage() {
                         Message
                       </button>
                     </form>
-                    <form action={requestSessionAction}>
-                      <input type="hidden" name="tutorId" value={tutor.tutorId} />
-                      <input type="hidden" name="requestedSlots" value={JSON.stringify([{ date: new Date().toISOString().split('T')[0], startTime: "10:00", endTime: "11:00" }])} />
-                      <input type="hidden" name="message" value="I would like to book a session" />
-                      <button className="rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-4 py-2 font-label-md font-bold shadow-xl border-4 border-white/30 transform hover:scale-105 transition-all active:scale-95">
-                        Book Session
-                      </button>
-                    </form>
+                    {(() => {
+                      const enrollment = enrollmentMap.get(tutor.tutorId);
+                      if (enrollment) {
+                        switch (enrollment.status) {
+                          case "pending":
+                            return (
+                              <span className="rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-2 font-label-sm font-bold shadow-xl border-4 border-white/30">
+                                Request Sent
+                              </span>
+                            );
+                          case "enrolled":
+                            return (
+                              <span className="rounded-xl bg-gradient-to-r from-green-400 to-emerald-500 text-white px-4 py-2 font-label-sm font-bold shadow-xl border-4 border-white/30">
+                                Enrolled
+                              </span>
+                            );
+                          case "rejected":
+                            return (
+                              <form action={requestEnrollmentAction}>
+                                <input type="hidden" name="tutorId" value={tutor.tutorId} />
+                                <button className="rounded-xl border-2 border-red-300 bg-gradient-to-br from-red-50 to-rose-50 text-red-600 px-3 py-2 font-label-sm font-bold shadow-lg hover:from-red-100 hover:to-rose-100 transition-all">
+                                  Request Again
+                                </button>
+                              </form>
+                            );
+                          case "cancelled":
+                            return (
+                              <form action={requestEnrollmentAction}>
+                                <input type="hidden" name="tutorId" value={tutor.tutorId} />
+                                <button className="rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-4 py-2 font-label-md font-bold shadow-xl border-4 border-white/30 transform hover:scale-105 transition-all active:scale-95">
+                                  Enroll
+                                </button>
+                              </form>
+                            );
+                          default:
+                            return (
+                              <form action={requestEnrollmentAction}>
+                                <input type="hidden" name="tutorId" value={tutor.tutorId} />
+                                <button className="rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-4 py-2 font-label-md font-bold shadow-xl border-4 border-white/30 transform hover:scale-105 transition-all active:scale-95">
+                                  Enroll
+                                </button>
+                              </form>
+                            );
+                        }
+                      } else {
+                        return (
+                          <form action={requestEnrollmentAction}>
+                            <input type="hidden" name="tutorId" value={tutor.tutorId} />
+                            <button className="rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-4 py-2 font-label-md font-bold shadow-xl border-4 border-white/30 transform hover:scale-105 transition-all active:scale-95">
+                              Enroll
+                            </button>
+                          </form>
+                        );
+                      }
+                    })()}
+                    <a
+                      href={`/tutoring/book?tutorId=${tutor.tutorId}`}
+                      className="rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-4 py-2 font-label-md font-bold shadow-xl border-4 border-white/30 transform hover:scale-105 transition-all active:scale-95"
+                    >
+                      Book Session
+                    </a>
                   </div>
                 </div>
               </div>

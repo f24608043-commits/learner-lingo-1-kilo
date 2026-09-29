@@ -469,6 +469,12 @@ export async function sendMessage(conversationId: string, body: string) {
     })
     .returning();
 
+  // Update conversation's lastMessageAt for proper ordering
+  await db
+    .update(conversations)
+    .set({ lastMessageAt: new Date() })
+    .where(eq(conversations.id, conversationId));
+
   revalidatePath("/messages");
   return { success: true, message };
 }

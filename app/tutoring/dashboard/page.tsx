@@ -1,6 +1,7 @@
-import { getMySessions, getTutorProfile, getTutorAvailability, getPendingRequests, createTutorProfileAction, acceptSessionRequestAction, declineSessionRequestAction, updateSessionStatusAction, setAvailabilityAction } from "../actions";
+import { getMySessions, getTutorProfile, getTutorAvailability, getPendingRequests, createTutorProfileAction, acceptSessionRequestAction, declineSessionRequestAction, updateSessionStatusAction } from "../actions";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import Mascot from "@/components/Mascot";
 import dynamic from "next/dynamic";
 
@@ -232,7 +233,7 @@ export default async function TutorDashboard() {
                     )}
                     <MessagingWidget
                       otherUserId={session.learnerId}
-                      otherUserName="Learner"
+                      otherUserName={session.learner?.displayName || "Learner"}
                       sessionId={session.id}
                     />
                   </div>
@@ -294,7 +295,7 @@ export default async function TutorDashboard() {
       <div className="rounded-2xl bg-surface-container-lowest p-6 shadow-md">
         <div className="flex items-center gap-2 mb-4">
           <span className="material-symbols-outlined text-primary text-[24px]">schedule</span>
-          <h2 className="font-headline-md text-headline-md text-on-surface font-extrabold">Set Availability</h2>
+          <h2 className="font-headline-md text-headline-md text-on-surface font-extrabold">Availability</h2>
         </div>
         <p className="font-body-sm text-on-surface-variant mb-4">
           Configure your weekly availability for tutoring sessions.
@@ -315,12 +316,13 @@ export default async function TutorDashboard() {
             </div>
           ))}
         </div>
-        <form action={setAvailabilityAction}>
-          <input type="hidden" name="slots" value='[{"dayOfWeek":1,"startTime":"09:00","endTime":"17:00"},{"dayOfWeek":2,"startTime":"09:00","endTime":"17:00"},{"dayOfWeek":3,"startTime":"09:00","endTime":"17:00"},{"dayOfWeek":4,"startTime":"09:00","endTime":"17:00"},{"dayOfWeek":5,"startTime":"09:00","endTime":"17:00"}]' />
-          <button className="rounded-xl bg-primary-container text-on-primary px-4 py-2 font-label-md font-bold shadow-glow hover:bg-primary transition-all active:translate-y-[2px]">
-            Edit Availability
-          </button>
-        </form>
+        <Link
+          href="/tutoring/schedule"
+          className="inline-flex items-center gap-2 rounded-xl bg-primary-container text-on-primary px-4 py-2 font-label-md font-bold shadow-glow hover:bg-primary transition-all active:translate-y-[2px]"
+        >
+          <span className="material-symbols-outlined">edit_calendar</span>
+          Manage Availability
+        </Link>
       </div>
     </div>
   );

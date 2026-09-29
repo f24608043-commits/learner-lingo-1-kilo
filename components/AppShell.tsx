@@ -30,10 +30,11 @@ export default function AppShell({ children, user }: AppShellProps) {
   const isAdmin = user.role === "admin";
 
   const learnerNav = [
-    { href: "/path", label: "Learning Path", icon: "📚" },
+    { href: "/path", label: "Path", icon: "🏠" },
     { href: "/library", label: "Library", icon: "📖" },
-    { href: "/friends", label: "Friends", icon: "👥" },
-    { href: "/leaderboard", label: "Leaderboard", icon: "🏆" },
+    { href: "/tutoring", label: "Class", icon: "👥" },
+    { href: "/friends", label: "Friends", icon: "👯" },
+    { href: "/messages", label: "Messages", icon: "💬" },
     { href: "/profile/" + user.id, label: "Profile", icon: "👤" },
   ];
 

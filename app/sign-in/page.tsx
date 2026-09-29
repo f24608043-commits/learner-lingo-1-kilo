@@ -70,27 +70,34 @@ export default async function SignInPage({
             />
           </div>
 
-          <div>
-            <div className="flex justify-between items-center mb-1.5">
-              <label className="block font-label-sm text-text-primary font-bold uppercase tracking-wide text-xs">
-                Password
-              </label>
-            </div>
-            <input
-              type="password"
-              name="password"
-              required
-              placeholder="••••••••"
-              className="w-full rounded-2xl border-2 border-surface-border bg-gray-50/80 px-4 py-3 text-sm font-medium text-text-primary placeholder:text-gray-400 focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all shadow-inner"
-            />
-          </div>
+<div>
+             <div className="flex justify-between items-center mb-1.5">
+               <label className="block font-label-sm text-text-primary font-bold uppercase tracking-wide text-xs">
+                 Password
+               </label>
+             </div>
+             <input
+               type="password"
+               name="password"
+               required
+               placeholder="••••••••"
+               className="w-full rounded-2xl border-2 border-surface-border bg-gray-50/80 px-4 py-3 text-sm font-medium text-text-primary placeholder:text-gray-400 focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all shadow-inner"
+             />
+           </div>
 
-          <button
-            type="submit"
-            className="w-full mt-2 rounded-2xl bg-primary text-white py-3.5 px-6 font-label-lg font-black uppercase tracking-wider shadow-lg border-b-4 border-primary-dark hover:brightness-105 active:translate-y-[2px] active:border-b-[1px] transition-all cursor-pointer"
-          >
-            Sign In 🚀
-          </button>
+<div className="flex items-start">
+              <div className="flex items-center h-5">
+                <input id="remember-me" name="remember" type="checkbox" className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary" />
+                <label htmlFor="remember-me" className="ml-2 text-sm font-medium text-text-primary">Remember me</label>
+              </div>
+            </div>
+
+           <button
+             type="submit"
+             className="w-full mt-4 rounded-2xl bg-red-500 text-white py-3.5 px-6 font-label-lg font-black uppercase tracking-wider shadow-lg border-b-4 border-red-600 hover:brightness-105 active:translate-y-[2px] active:border-b-[1px] transition-all cursor-pointer"
+           >
+             Sign In 🚀
+           </button>
         </form>
 
         {/* Motivation note */}

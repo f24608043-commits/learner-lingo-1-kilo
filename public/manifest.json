@@ -1,0 +1,19 @@
+{
+  "name": "LEGO Learn And Go",
+  "short_name": "LEGO Learn",
+  "description": "AI-powered, gamified learning with video lessons, quizzes, and live tutoring.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#22c55e",
+  "orientation": "portrait-primary",
+  "categories": ["education", "learning", "gamification"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

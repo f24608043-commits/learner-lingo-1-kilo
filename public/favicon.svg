@@ -1,0 +1,30 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- LEGO-style head -->
+  <g>
+    <!-- Head base -->
+    <rect x="16" y="8" width="32" height="28" rx="4" fill="#22c55e" />
+    <!-- Stud on top -->
+    <rect x="28" y="4" width="8" height="6" rx="2" fill="#4ae176" />
+    
+    <!-- Face -->
+    <!-- Eyes -->
+    <circle cx="24" cy="22" r="4" fill="#ffffff" />
+    <circle cx="40" cy="22" r="4" fill="#ffffff" />
+    <circle cx="25" cy="23" r="2" fill="#131b2e" />
+    <circle cx="41" cy="23" r="2" fill="#131b2e" />
+    
+    <!-- Mouth (smiling) -->
+    <path d="M28 30 Q32 34 36 30" stroke="#131b2e" strokeWidth="2" fill="none" strokeLinecap="round" />
+  </g>
+  
+  <!-- Body -->
+  <rect x="20" y="36" width="24" height="20" rx="3" fill="#006e2f" />
+  
+  <!-- Arms at sides (idle pose) -->
+  <path d="M20 32 L15 42" stroke="#006e2f" strokeWidth="4" strokeLinecap="round" />
+  <path d="M44 32 L49 42" stroke="#006e2f" strokeWidth="4" strokeLinecap="round" />
+  
+  <!-- Legs -->
+  <rect x="22" y="56" width="8" height="6" rx="2" fill="#004b1e" />
+  <rect x="34" y="56" width="8" height="6" rx="2" fill="#004b1e" />
+</svg>

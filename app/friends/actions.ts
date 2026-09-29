@@ -332,6 +332,48 @@ export async function searchLearners(query: string) {
     return [];
   }
 
+  // Get current user's friends and pending requests to exclude them
+  const userId = user.id;
+  
+  // Get friend IDs (accepted)
+  const friendRows = await db
+    .select({
+      friendId: profiles.id,
+    })
+    .from(profiles)
+    .innerJoin(friendships, or(
+      and(eq(friendships.requesterId, userId), eq(friendships.addresseeId, profiles.id)),
+      and(eq(friendships.addresseeId, userId), eq(friendships.requesterId, profiles.id))
+    ))
+    .where(eq(friendships.status, "accepted"));
+
+  const friendIds = new Set(friendRows.map(f => f.friendId));
+  friendIds.add(userId); // Also exclude self
+
+  // Get pending request IDs (both sent and received)
+  const pendingRows = await db
+    .select({
+      requesterId: friendships.requesterId,
+      addresseeId: friendships.addresseeId,
+    })
+    .from(friendships)
+    .where(
+      and(
+        eq(friendships.status, "pending"),
+        or(eq(friendships.requesterId, userId), eq(friendships.addresseeId, userId))
+      )
+    );
+
+  const pendingIds = new Set();
+  for (const p of pendingRows) {
+    pendingIds.add(p.requesterId);
+    pendingIds.add(p.addresseeId);
+  }
+
+  // Combine all excluded IDs
+  const excludedIds = new Set([...friendIds, ...pendingIds]);
+
+  // Search for learners matching the query
   const results = await db
     .select({
       id: profiles.id,
@@ -344,12 +386,82 @@ export async function searchLearners(query: string) {
     .where(
       and(
         eq(profiles.role, "learner"),
-        // Exclude current user
-        // Using raw sql or standard condition
+        // Note: We filter in JS for the query match since ILIKE varies by DB
       )
     )
-    .limit(10);
+    .limit(50);
 
-  return results.filter((p) => p.id !== user.id && p.displayName?.toLowerCase().includes(query.toLowerCase()));
+  // Filter results: exclude self, friends, pending requests, and match query
+  return results
+    .filter((p) => !excludedIds.has(p.id))
+    .filter((p) => p.displayName?.toLowerCase().includes(query.toLowerCase()))
+    .slice(0, 10);
+}
+
+export async function getFriendSuggestions(limit: number = 8) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user?.id) {
+    return [];
+  }
+
+  const userId = user.id;
+  
+  // Get friend IDs (accepted)
+  const friendRows = await db
+    .select({
+      friendId: profiles.id,
+    })
+    .from(profiles)
+    .innerJoin(friendships, or(
+      and(eq(friendships.requesterId, userId), eq(friendships.addresseeId, profiles.id)),
+      and(eq(friendships.addresseeId, userId), eq(friendships.requesterId, profiles.id))
+    ))
+    .where(eq(friendships.status, "accepted"));
+
+  const friendIds = new Set(friendRows.map(f => f.friendId));
+  friendIds.add(userId); // Also exclude self
+
+  // Get pending request IDs (both sent and received)
+  const pendingRows = await db
+    .select({
+      requesterId: friendships.requesterId,
+      addresseeId: friendships.addresseeId,
+    })
+    .from(friendships)
+    .where(
+      and(
+        eq(friendships.status, "pending"),
+        or(eq(friendships.requesterId, userId), eq(friendships.addresseeId, userId))
+      )
+    );
+
+  const pendingIds = new Set();
+  for (const p of pendingRows) {
+    pendingIds.add(p.requesterId);
+    pendingIds.add(p.addresseeId);
+  }
+
+  // Combine all excluded IDs
+  const excludedIds = new Set([...friendIds, ...pendingIds]);
+
+  // Get suggested learners (learners not already friends/pending)
+  const results = await db
+    .select({
+      id: profiles.id,
+      displayName: profiles.displayName,
+      xp: profiles.xp,
+      streakCount: profiles.streakCount,
+      avatarUrl: profiles.avatarUrl,
+    })
+    .from(profiles)
+    .where(eq(profiles.role, "learner"))
+    .limit(50);
+
+  return results
+    .filter((p) => !excludedIds.has(p.id))
+    .sort(() => Math.random() - 0.5) // Randomize for variety
+    .slice(0, limit);
 }
 
