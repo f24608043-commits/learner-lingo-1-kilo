@@ -8,9 +8,9 @@ test.describe('Live Session Booking - Database Verification', () => {
 
   test.beforeAll(async () => {
     // Use test credentials
-    learnerEmail = process.env.TEST_LEARNER_EMAIL || 'testlearner+test@gmail.com';
-    learnerPassword = process.env.TEST_LEARNER_PASSWORD || 'Test123456!';
-    tutorId = process.env.TEST_TUTOR_ID || 'a8b34bb1-dbc1-421a-b8c1-34429e4e29cd';
+    learnerEmail = process.env.TEST_LEARNER_EMAIL || 'learner@gmail.com';
+    learnerPassword = process.env.TEST_LEARNER_PASSWORD || 'learner@1221';
+    tutorId = process.env.TEST_TUTOR_ID || 'bee03320-feed-4692-9107-deada6f81ba7';
     
     // For now, use a known learner ID from setup
     // In production, this would come from an API call

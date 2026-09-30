@@ -103,7 +103,7 @@ export default function UnifiedShell({
       bottom: [
         { path: "/tutoring/dashboard", label: "Dashboard", icon: "dashboard" },
         { path: "/tutoring", label: "Sessions", icon: "groups" },
-        { path: "/tutoring/learners", label: "Learners", icon: "people" },
+        { path: "/messages", label: "Messages", icon: "chat" },
         { path: "/tutoring/history", label: "History", icon: "history" },
         { path: "/profile", label: "Profile", icon: "person" },
       ],
@@ -126,7 +126,7 @@ export default function UnifiedShell({
         { path: "/admin/users", label: "Users", icon: "people" },
         { path: "/admin/courses", label: "Courses", icon: "school" },
         { path: "/admin/badges", label: "Badges", icon: "military_tech" },
-        { path: "/more", label: "More", icon: "more_horiz" },
+        { path: "/admin/tutoring", label: "Tutoring", icon: "groups" },
       ],
       more: [
         { path: "/admin/tutoring", label: "Tutoring", icon: "groups" },
@@ -250,8 +250,11 @@ export default function UnifiedShell({
         </div>
       </aside>
 
-      {/* Main Content - Responsive padding */}
-      <div className="flex-1 lg:pl-64 md:pl-16 pl-0">
+      {/* Main Content - Responsive padding.
+          min-w-0 is required: as a flex child the default `min-width: auto`
+          stops it shrinking below its content's intrinsic width, which pushed
+          wide page content past the viewport on small screens. */}
+      <div className="flex-1 min-w-0 lg:pl-64 md:pl-16 pl-0">
         {/* Top Header - Mobile: slim, Desktop: full */}
         <header className="fixed top-0 left-0 right-0 lg:left-64 md:left-16 h-16 bg-surface/90 backdrop-blur-xl shadow-clay-surface z-40 flex items-center justify-between px-4 lg:px-6">
           {/* Mobile Logo & Stats */}

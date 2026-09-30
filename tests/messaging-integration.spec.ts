@@ -2,10 +2,10 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Messaging Integration Tests', () => {
   test('learner path dashboard shows tutoring sessions section', async ({ page }) => {
-    // Login as tutor (learner account has password issues)
+    // Login as tutor
     await page.goto('http://localhost:3000/sign-in');
-    await page.fill('input[name="email"]', 'orphix.itsolutions@gmail.com');
-    await page.fill('input[name="password"]', 'Qasim.11');
+    await page.fill('input[name="email"]', 'tutor@gmail.com');
+    await page.fill('input[name="password"]', 'tutor@1221');
     await page.click('button[type="submit"]');
     await page.waitForURL(/\/tutoring\/dashboard|\/path/, { timeout: 15000 });
     
@@ -24,8 +24,8 @@ test.describe('Messaging Integration Tests', () => {
 
   test('tutoring page has messaging widget on session cards', async ({ page }) => {
     await page.goto('http://localhost:3000/sign-in');
-    await page.fill('input[name="email"]', 'orphix.itsolutions@gmail.com');
-    await page.fill('input[name="password"]', 'Qasim.11');
+    await page.fill('input[name="email"]', 'tutor@gmail.com');
+    await page.fill('input[name="password"]', 'tutor@1221');
     await page.click('button[type="submit"]');
     await page.waitForURL(/\/tutoring\/dashboard|\/path/, { timeout: 15000 });
     
@@ -46,10 +46,10 @@ test.describe('Messaging Integration Tests', () => {
 test.describe('Admin YouTube Import Tests', () => {
   test('admin course creation page loads with form', async ({ page }) => {
     await page.goto('http://localhost:3000/sign-in');
-    await page.fill('input[name="email"]', 'alexabraham587@gmail.com');
-    await page.fill('input[name="password"]', 'Qasim.11');
+    await page.fill('input[name="email"]', 'admin@gmail.com');
+    await page.fill('input[name="password"]', 'admin@1221');
     await page.click('button[type="submit"]');
-    await page.waitForURL(/\/path/, { timeout: 15000 });
+    await page.waitForURL(/\/admin/, { timeout: 15000 });
     
     await page.goto('http://localhost:3000/admin/courses/new');
     await page.waitForLoadState('domcontentloaded', { timeout: 15000 });

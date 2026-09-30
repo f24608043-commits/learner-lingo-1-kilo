@@ -52,10 +52,12 @@ export default function ChatWidget() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!message.trim() || isLoading) return;
+  const handleSend = async (override?: string | React.MouseEvent) => {
+    const raw = typeof override === "string" ? override : message;
+    const text = raw.trim();
+    if (!text || isLoading) return;
 
-    const userMessage = message;
+    const userMessage = text;
     setMessage("");
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setIsLoading(true);
@@ -225,37 +227,25 @@ export default function ChatWidget() {
           {/* Quick actions */}
           <div className="p-3 bg-gray-50 border-t border-gray-200 flex gap-2 flex-wrap">
             <button
-              onClick={() => {
-                setMessage("Give me a hint!");
-                handleSend();
-              }}
+              onClick={() => handleSend("Give me a hint!")}
               className="px-3 py-1.5 bg-white border-2 border-green-500 text-green-600 rounded-full text-xs font-medium hover:bg-green-50 transition-colors"
             >
               💡 Hint
             </button>
             <button
-              onClick={() => {
-                setMessage("Explain this concept");
-                handleSend();
-              }}
+              onClick={() => handleSend("Explain this concept")}
               className="px-3 py-1.5 bg-white border-2 border-green-500 text-green-600 rounded-full text-xs font-medium hover:bg-green-50 transition-colors"
             >
               📖 Explain
             </button>
             <button
-              onClick={() => {
-                setMessage("Quiz me!");
-                handleSend();
-              }}
+              onClick={() => handleSend("Quiz me!")}
               className="px-3 py-1.5 bg-white border-2 border-green-500 text-green-600 rounded-full text-xs font-medium hover:bg-green-50 transition-colors"
             >
               🎯 Quiz me
             </button>
             <button
-              onClick={() => {
-                setMessage("Tell me a joke");
-                handleSend();
-              }}
+              onClick={() => handleSend("Tell me a joke")}
               className="px-3 py-1.5 bg-white border-2 border-green-500 text-green-600 rounded-full text-xs font-medium hover:bg-green-50 transition-colors"
             >
               😄 Joke

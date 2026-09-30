@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { loginAs } from './auth';
 
 test.describe('Design Verification - Claymorphism + Mobile Nav', () => {
   const pages = ['/path', '/messages', '/tutoring', '/admin'];
@@ -14,16 +15,10 @@ test.describe('Design Verification - Claymorphism + Mobile Nav', () => {
         
         // Sign in as learner for learner pages, admin for admin pages
         if (pagePath === '/admin') {
-          await page.goto('/sign-in');
-          await page.fill('input[type="email"]', 'alexabraham587@gmail.com');
-          await page.fill('input[type="password"]', 'Qasim.11');
-          await page.click('button[type="submit"]');
+          await loginAs(page, 'admin');
           await page.waitForLoadState('networkidle', { timeout: 30000 });
         } else {
-          await page.goto('/sign-in');
-          await page.fill('input[type="email"]', 'testlearner+test@gmail.com');
-          await page.fill('input[type="password"]', 'Test123456!');
-          await page.click('button[type="submit"]');
+          await loginAs(page, 'learner');
           await page.waitForLoadState('networkidle', { timeout: 30000 });
           
           // Handle onboarding redirect

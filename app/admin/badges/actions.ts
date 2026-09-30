@@ -37,6 +37,7 @@ export async function createBadge(data: {
   name: string;
   description: string;
   icon: string;
+  category: "academic" | "participation" | "behavior" | "achievement" | "milestone" | "social";
   criteriaType: "first_lesson" | "lessons_completed" | "course_complete" | "streak_days" | "xp_earned";
   criteriaValue: number;
 }) {
@@ -44,7 +45,14 @@ export async function createBadge(data: {
 
   const [badge] = await db
     .insert(badges)
-    .values(data)
+    .values({
+      name: data.name,
+      description: data.description,
+      iconUrl: data.icon,
+      category: data.category,
+      criteriaType: data.criteriaType,
+      criteriaValue: data.criteriaValue,
+    })
     .returning();
 
   revalidatePath("/admin/badges");
@@ -55,6 +63,7 @@ export async function updateBadge(id: string, data: {
   name: string;
   description: string;
   icon: string;
+  category: "academic" | "participation" | "behavior" | "achievement" | "milestone" | "social";
   criteriaType: "first_lesson" | "lessons_completed" | "course_complete" | "streak_days" | "xp_earned";
   criteriaValue: number;
 }) {
@@ -62,7 +71,15 @@ export async function updateBadge(id: string, data: {
 
   const [badge] = await db
     .update(badges)
-    .set(data)
+    .set({
+      name: data.name,
+      description: data.description,
+      iconUrl: data.icon,
+      category: data.category,
+      criteriaType: data.criteriaType,
+      criteriaValue: data.criteriaValue,
+      updatedAt: new Date(),
+    })
     .where(eq(badges.id, id))
     .returning();
 

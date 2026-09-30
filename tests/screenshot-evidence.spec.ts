@@ -1,4 +1,25 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
+import { loginAs } from './auth';
+
+const SHOTS = 'screenshots';
+
+/**
+ * `fullPage` captures intermittently fail in dev with
+ * "Page.captureScreenshot: Unable to capture screenshot" while a route is
+ * still settling. Retry briefly instead of failing the evidence run.
+ */
+async function shot(page: import('@playwright/test').Page, name: string) {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      await page.screenshot({ path: `${SHOTS}/${name}`, fullPage: true });
+      return;
+    } catch (err) {
+      if (attempt === 3) throw err;
+      await page.waitForLoadState('load').catch(() => {});
+      await page.waitForTimeout(1000);
+    }
+  }
+}
 
 test.describe('Duolingo-Style Claymorphism Visual Verification', () => {
   test('Capture screenshots of key pages', async ({ page }) => {
@@ -6,55 +27,45 @@ test.describe('Duolingo-Style Claymorphism Visual Verification', () => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/sign-in');
     await page.waitForLoadState('domcontentloaded');
-    await page.screenshot({ path: 'screenshots/sign-in-desktop.png', fullPage: true });
-
-    // Login as learner
-    await page.fill('input[type="email"]', 'learner@gmail.com');
-    await page.fill('input[type="password"]', 'learner@1221');
-    await page.click('button[type="submit"]');
-    await page.waitForLoadState('domcontentloaded');
+    await shot(page, 'sign-in-desktop.png');
 
     // 2. Learning Path (/path)
+    await loginAs(page, 'learner');
     await page.goto('/path');
     await page.waitForLoadState('domcontentloaded');
-    await page.screenshot({ path: 'screenshots/path-desktop.png', fullPage: true });
+    await shot(page, 'path-desktop.png');
 
     // 3. Lesson Page (/lesson/[id])
     await page.goto('/lesson/dd4e5ae3-5f37-4bdc-ae1d-13239a226a0f');
     await page.waitForLoadState('domcontentloaded');
-    await page.screenshot({ path: 'screenshots/lesson-desktop.png', fullPage: true });
+    await shot(page, 'lesson-desktop.png');
 
     // 4. Tutoring Page (/tutoring)
     await page.goto('/tutoring');
     await page.waitForLoadState('domcontentloaded');
-    await page.screenshot({ path: 'screenshots/tutoring-desktop.png', fullPage: true });
+    await shot(page, 'tutoring-desktop.png');
 
     // 5. Friends Page (/friends)
     await page.goto('/friends');
     await page.waitForLoadState('domcontentloaded');
-    await page.screenshot({ path: 'screenshots/friends-desktop.png', fullPage: true });
+    await shot(page, 'friends-desktop.png');
 
     // 5b. Leaderboard Page (/leaderboard)
     await page.goto('/leaderboard');
     await page.waitForLoadState('domcontentloaded');
-    await page.screenshot({ path: 'screenshots/leaderboard-desktop.png', fullPage: true });
+    await shot(page, 'leaderboard-desktop.png');
 
     // 6. Mobile Viewport (390x844) on Path
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/path');
     await page.waitForLoadState('domcontentloaded');
-    await page.screenshot({ path: 'screenshots/path-mobile-390.png', fullPage: true });
+    await shot(page, 'path-mobile-390.png');
 
-    // 7. Sign in as Admin and capture Admin Dashboard
+    // 7. Admin Dashboard
     await page.setViewportSize({ width: 1280, height: 800 });
-    await page.goto('/sign-in');
-    await page.fill('input[type="email"]', 'admin@gmail.com');
-    await page.fill('input[type="password"]', 'admin@1221');
-    await page.click('button[type="submit"]');
-    await page.waitForLoadState('domcontentloaded');
-
+    await loginAs(page, 'admin');
     await page.goto('/admin');
     await page.waitForLoadState('domcontentloaded');
-    await page.screenshot({ path: 'screenshots/admin-desktop.png', fullPage: true });
+    await shot(page, 'admin-desktop.png');
   });
 });

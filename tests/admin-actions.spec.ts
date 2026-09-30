@@ -1,16 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { authState } from './auth';
+
+test.use({ storageState: authState('admin') });
 
 test.describe('Admin Actions - Form Submissions', () => {
-  test.beforeEach(async ({ page }) => {
-    // Sign in as admin
-    await page.goto('/sign-in');
-    await page.waitForLoadState('networkidle');
-    await page.fill('input[name="email"]', 'alexabraham587@gmail.com');
-    await page.fill('input[name="password"]', 'Qasim.11');
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/admin/, { timeout: 30000 });
-  });
-
   test('admin badge creation form exists and is fillable', async ({ page }) => {
     await page.goto('/admin/badges');
     await page.waitForLoadState('domcontentloaded', { timeout: 15000 });

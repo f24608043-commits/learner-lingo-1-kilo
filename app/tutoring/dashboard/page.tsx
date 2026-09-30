@@ -24,7 +24,7 @@ export default async function TutorDashboard() {
     .eq("id", user.id)
     .maybeSingle();
 
-  if (!userProfile || userProfile.role !== "tutor") {
+  if (!userProfile || (userProfile.role !== "tutor" && userProfile.role !== "admin")) {
     redirect("/tutoring?error=tutor_only");
   }
 
@@ -35,9 +35,7 @@ export default async function TutorDashboard() {
     getPendingRequests()
   ]);
 
-  if (!tutorProfile) {
-    redirect("/tutoring?error=tutor_only");
-  }
+  // Note: tutors without a profile stay on this page so they can create one
 
   // Separate upcoming and past sessions
   const now = new Date();

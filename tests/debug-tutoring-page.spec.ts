@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Debug Tutoring Page', () => {
   test('check tutoring page content', async ({ page }) => {
-    const learnerEmail = 'testlearner+test@gmail.com';
-    const learnerPassword = 'Test123456!';
+    const learnerEmail = 'learner@gmail.com';
+    const learnerPassword = 'learner@1221';
     
     // Login
     await page.goto('/sign-in');

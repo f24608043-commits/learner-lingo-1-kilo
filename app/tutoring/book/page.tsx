@@ -370,7 +370,7 @@ export default function BookingCalendar({ tutorId }: { tutorId?: string }) {
                   <React.Fragment key={time}>
                     {/* Time Label */}
                     <div className="relative p-2 text-right text-xs text-text-muted font-label-sm border-b border-surface-border/50 border-r border-surface-border/50">
-                      {format(parseISO(`2000-01-01T${time}:00`), "h:mm a")}
+                      {formatDate(parseISO(`2000-01-01T${time}:00`), "h:mm a")}
                     </div>
                     {/* Day Columns */}
                     {weekDays.map((day, dayIdx) => {

@@ -111,7 +111,7 @@ export async function POST(request: Request) {
           courseId: null,
           scheduledAt: startDateTime,
           durationMins,
-          status: "pending",
+          status: "requested",
           jitsiRoomId: null,
         })
         .returning();

@@ -59,9 +59,10 @@ export default async function AdminUsersPage({
         </form>
       </div>
 
-      {/* Users Table */}
-      <div className="rounded-2xl bg-gradient-to-br from-white to-blue-50 shadow-xl border-4 border-blue-100 overflow-hidden">
-        <table className="w-full">
+      {/* Users Table - scrolls horizontally on narrow screens so no columns
+          are clipped out of reach on mobile. */}
+      <div className="rounded-2xl bg-gradient-to-br from-white to-blue-50 shadow-xl border-4 border-blue-100 overflow-x-auto">
+        <table className="w-full min-w-[640px]">
           <thead className="bg-gradient-to-r from-blue-500 to-indigo-500 border-b-4 border-blue-200">
             <tr>
               <th className="px-6 py-3 text-left font-label-md font-semibold text-white">Name</th>

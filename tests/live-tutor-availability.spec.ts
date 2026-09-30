@@ -8,8 +8,8 @@ test.describe('Live Tutor Availability Edit - Database Verification', () => {
   test.beforeAll(async () => {
     // Use test credentials for a tutor with existing profile
     tutorEmail = process.env.TEST_TUTOR_EMAIL || 'testtutor+test@gmail.com';
-    tutorPassword = process.env.TEST_TUTOR_PASSWORD || 'Test123456!';
-    tutorId = process.env.TEST_TUTOR_ID || 'a8b34bb1-dbc1-421a-b8c1-34429e4e29cd';
+    tutorPassword = process.env.TEST_TUTOR_PASSWORD || 'learner@1221';
+    tutorId = process.env.TEST_TUTOR_ID || 'bee03320-feed-4692-9107-deada6f81ba7';
   });
 
   test('tutor availability exists in database', async ({ request: apiRequest }) => {

@@ -170,13 +170,24 @@ export const userProgress = pgTable(
 );
 
 // ── 10. BADGES ────────────────────────────────────────────
+export const badgeCategoryEnum = pgEnum("badge_category", [
+  "academic",
+  "participation",
+  "behavior",
+  "achievement",
+  "milestone",
+  "social",
+]);
+
 export const badges = pgTable("badges", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull().unique(),
   description: text("description"),
   iconUrl: text("icon_url"),
+  category: badgeCategoryEnum("category").notNull(),
   criteriaType: badgeCriteriaEnum("criteria_type").notNull(),
   criteriaValue: integer("criteria_value").notNull().default(1),
+  isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -327,7 +338,8 @@ export const sessionRequests = pgTable("session_requests", {
 });
 
 // ── 17. TUTOR_ENROLLMENTS ───────────────────────────────────
-export const enrollmentStatusEnum = pgEnum("tutor_enrollment_status", [
+// Name must match the live Postgres type on tutor_enrollments.status.
+export const enrollmentStatusEnum = pgEnum("enrollment_status", [
   "pending",
   "enrolled",
   "rejected",
@@ -440,6 +452,20 @@ export const notificationTypeEnum = pgEnum("notification_type", [
   "streak_milestone",
   "lesson_completed",
   "leaderboard_rank",
+  "enrollment_request",
+  "enrollment_accepted",
+  "enrollment_declined",
+  "session_scheduled",
+  "session_reminder",
+  "session_started",
+  "session_cancelled",
+  "task_assigned",
+  "task_submitted",
+  "task_graded",
+  "badge_awarded",
+  "message_received",
+  "group_invite",
+  "system",
 ]);
 
 export const notifications = pgTable(
@@ -537,3 +563,69 @@ export const messageReports = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
 );
+
+// ── 26. LEARNER_BADGES ───────────────────────────────────────
+export const learnerBadges = pgTable(
+  "learner_badges",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    learnerId: uuid("learner_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    badgeId: uuid("badge_id")
+      .notNull()
+      .references(() => badges.id, { onDelete: "cascade" }),
+    awardedByTutorId: uuid("awarded_by_tutor_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    context: text("context"),
+    awardedAt: timestamp("awarded_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.learnerId, t.badgeId)]
+);
+
+// ── 27. TASKS ──────────────────────────────────────────────────
+export const taskStatusEnum = pgEnum("task_status", [
+  "assigned",
+  "submitted",
+  "graded",
+  "overdue",
+  "cancelled",
+]);
+
+export const taskTargetTypeEnum = pgEnum("task_target_type", [
+  "learner",
+  "classroom",
+]);
+
+export const tasks = pgTable("tasks", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tutorId: uuid("tutor_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "cascade" }),
+  targetType: taskTargetTypeEnum("target_type").notNull(),
+  targetId: uuid("target_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  dueDate: timestamp("due_date", { withTimezone: true }),
+  status: taskStatusEnum("status").notNull().default("assigned"),
+  attachments: jsonb("attachments"),
+  feedback: text("feedback"),
+  grade: text("grade"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ── 28. USER_RANKS ────────────────────────────────────────────
+export const userRanks = pgTable("user_ranks", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "cascade" })
+    .unique(),
+  role: text("role").notNull(), // 'learner' | 'tutor'
+  level: integer("level").notNull().default(1),
+  points: integer("points").notNull().default(0),
+  metrics: jsonb("metrics"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});

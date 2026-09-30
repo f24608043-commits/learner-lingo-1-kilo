@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Live Login Test - Basic Verification', () => {
   test('learner can login successfully', async ({ page }) => {
-    const learnerEmail = 'testlearner+test@gmail.com';
-    const learnerPassword = 'Test123456!';
+    const learnerEmail = 'learner@gmail.com';
+    const learnerPassword = 'learner@1221';
     
     await page.goto('/sign-in');
     await page.waitForLoadState('domcontentloaded', { timeout: 15000 });

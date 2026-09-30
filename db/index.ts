@@ -16,10 +16,10 @@ function getClient(): postgres.Sql {
       connection: {
         timeout: 30000, // 30 second connection timeout
       },
-      max: process.env.NODE_ENV === "production" ? 10 : 5,
-      idle_timeout: 10, // Close idle connections faster
+      max: process.env.NODE_ENV === "production" ? 20 : 10,
+      idle_timeout: 60, // Keep pooled connections warm (seconds)
       connect_timeout: 30, // 30 second connection attempt timeout
-      max_lifetime: 60 * 30, // Recycle connections after 30 minutes
+      max_lifetime: 60 * 30, // Recycle connections every 30 minutes
     });
   }
 

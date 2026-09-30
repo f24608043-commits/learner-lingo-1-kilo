@@ -96,9 +96,10 @@ export default async function AdminCoursesPage() {
         </form>
       </div>
 
-      {/* Courses List */}
-      <div className="rounded-2xl bg-gradient-to-br from-white to-green-50 shadow-xl border-4 border-green-100 overflow-hidden">
-        <table className="w-full">
+      {/* Courses List - scrolls horizontally on narrow screens so no columns
+          are clipped out of reach on mobile. */}
+      <div className="rounded-2xl bg-gradient-to-br from-white to-green-50 shadow-xl border-4 border-green-100 overflow-x-auto">
+        <table className="w-full min-w-[640px]">
           <thead className="bg-gradient-to-r from-green-500 to-emerald-500 border-b-4 border-green-200">
             <tr>
               <th className="px-6 py-3 text-left font-label-md font-semibold text-white">Name</th>

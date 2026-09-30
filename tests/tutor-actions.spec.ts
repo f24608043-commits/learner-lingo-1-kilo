@@ -1,14 +1,10 @@
 import { test, expect } from '@playwright/test';
+import { loginAs } from './auth';
 
 test.describe('Tutor Actions - Profile and Sessions', () => {
   test.beforeEach(async ({ page }) => {
     // Sign in as tutor
-    await page.goto('/sign-in');
-    await page.waitForLoadState('networkidle');
-    await page.fill('input[name="email"]', 'tutor@gmail.com');
-    await page.fill('input[name="password"]', 'tutor@1221');
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/tutoring\/dashboard|\/path/, { timeout: 30000 });
+    await loginAs(page, 'tutor');
   });
 
   test('tutor can access create profile button', async ({ page }) => {

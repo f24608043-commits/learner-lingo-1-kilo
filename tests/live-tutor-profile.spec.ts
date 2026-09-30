@@ -1,66 +1,62 @@
 import { test, expect } from '@playwright/test';
+import postgres from 'postgres';
+import { config } from 'dotenv';
+import { loginAs } from './auth';
+
+config({ path: '.env.local' });
+
+const TUTOR_ID = process.env.TEST_TUTOR_ID || 'e7882451-c1a0-4ede-ac5a-33ed6c707485';
 
 test.describe('Live Tutor Profile Creation - Database Verification', () => {
-  let tutorEmail: string;
-  let tutorPassword: string;
-  let tutorId: string;
-
+  // The setup flow only renders when no tutor_profiles row exists, so the
+  // previous run's row has to go before asserting on the "Create Profile" path.
   test.beforeAll(async () => {
-    // Use test credentials for a user without tutor profile
-    tutorEmail = process.env.TEST_TUTOR_EMAIL || 'testtutor+test@gmail.com';
-    tutorPassword = process.env.TEST_TUTOR_PASSWORD || 'Test123456!';
-    tutorId = process.env.TEST_TUTOR_ID || 'a8b34bb1-dbc1-421a-b8c1-34429e4e29cd';
+    const sql = postgres(process.env.DATABASE_URL!, {
+      prepare: false,
+      ssl: { rejectUnauthorized: false },
+      onnotice: () => {},
+    });
+    try {
+      await sql`DELETE FROM tutor_profiles WHERE tutor_id = ${TUTOR_ID}`;
+    } finally {
+      await sql.end();
+    }
   });
 
-  test('tutor creates profile and tutor_profiles row is created', async ({ page, request: apiRequest }) => {
-    // Step 1: Login as user without tutor profile
-    await page.goto('/sign-in');
-    await page.waitForLoadState('domcontentloaded', { timeout: 15000 });
-    
-    await page.fill('input[type="email"]', tutorEmail);
-    await page.fill('input[type="password"]', tutorPassword);
-    await page.click('button[type="submit"]');
-    
-    await page.waitForURL('/path', { timeout: 15000 });
-    
-    // Step 2: Navigate to tutoring dashboard
+  test('tutor creates profile and tutor_profiles row is created', async ({ page }) => {
+    await loginAs(page, 'tutor2');
+
     await page.goto('/tutoring/dashboard');
     await page.waitForLoadState('domcontentloaded', { timeout: 15000 });
-    
-    // Step 3: Check if "Create Profile" button exists
-    const createProfileButton = page.locator('button:has-text("Create Profile"), a:has-text("Create Profile")').first();
-    const buttonCount = await createProfileButton.count();
-    console.log('Create profile buttons found:', buttonCount);
-    
-    if (buttonCount === 0) {
-      // Take screenshot for debugging
-      await page.screenshot({ path: 'tutor-dashboard-no-create-button.png' });
-      test.skip(true, 'No create profile button found - screenshot saved. Profile may already exist or UI changed.');
-    }
-    
+
+    const createProfileButton = page
+      .locator('button:has-text("Create Profile"), a:has-text("Create Profile")')
+      .first();
+    await expect(createProfileButton).toBeVisible({ timeout: 15000 });
+
     await createProfileButton.click();
-    await page.waitForTimeout(3000); // Wait for server action and database operation
-    
-    // Step 4: Query API to verify tutor_profiles row was created
-    const response = await apiRequest.get(`/api/test/tutor-profile?tutorId=${tutorId}`);
-    
-    if (response.status() === 404) {
-      test.skip(true, 'API endpoint not found - needs to be created');
-    }
-    
+    await page.waitForTimeout(3000);
+
+    // Verify the row via the authenticated API (shares the page session cookie)
+    const response = await page.request.get(`/api/test/tutor-profile?tutorId=${TUTOR_ID}`);
+    expect(response.ok()).toBeTruthy();
+
     const data = await response.json();
-    
     expect(data.success).toBe(true);
     expect(data.tutorProfile).toBeDefined();
-    
-    const tutorProfile = data.tutorProfile;
-    console.log('✅ Tutor profile row created:', JSON.stringify(tutorProfile, null, 2));
-    
-    // Verify the row has required fields
-    expect(tutorProfile.tutorId).toBe(tutorId);
-    expect(tutorProfile.bio).toBeDefined();
-    expect(tutorProfile.subjects).toBeDefined();
-    expect(tutorProfile.createdAt).toBeDefined();
-    expect(tutorProfile.isActive).toBeDefined();
+
+    const profile = data.tutorProfile;
+    console.log('Tutor profile row created:', JSON.stringify(profile, null, 2));
+
+    expect(profile.tutorId).toBe(TUTOR_ID);
+    expect(profile.bio).toBeTruthy();
+    expect(profile.subjects).toBeTruthy();
+    expect(profile.createdAt).toBeTruthy();
+    expect(profile.isActive).toBe(true);
+
+    // Dashboard should now show the profile instead of the setup form
+    await page.goto('/tutoring/dashboard');
+    await page.waitForLoadState('domcontentloaded', { timeout: 15000 });
+    await expect(page.locator('button:has-text("Create Profile")')).toHaveCount(0);
   });
 });

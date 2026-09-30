@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { format } from "date-fns";
 
 interface ReminderSession {
   id: string;
@@ -81,14 +82,29 @@ export default function SessionReminders({ isTutor }: { isTutor?: boolean }) {
     try {
       const response = await fetch("/api/tutoring/reminders");
       if (response.ok) {
-        const data = await response.json();
+        const text = await response.text();
+        if (!text) {
+          console.warn("Empty response from reminders API");
+          setReminders({ upcomingIn1Hour: [], upcomingIn24Hours: [], totalUpcoming: 0 });
+          return;
+        }
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (parseError) {
+          console.error("Failed to parse reminders response:", parseError, "Response text:", text);
+          setReminders({ upcomingIn1Hour: [], upcomingIn24Hours: [], totalUpcoming: 0 });
+          return;
+        }
         // Ensure data has the expected structure
         if (data && typeof data === 'object' && 'upcomingIn1Hour' in data && 'upcomingIn24Hours' in data) {
           setReminders(data);
         } else {
+          console.warn("Unexpected reminders data structure:", data);
           setReminders({ upcomingIn1Hour: [], upcomingIn24Hours: [], totalUpcoming: 0 });
         }
       } else {
+        console.warn("Reminders API returned non-ok status:", response.status);
         setReminders({ upcomingIn1Hour: [], upcomingIn24Hours: [], totalUpcoming: 0 });
       }
     } catch (error) {

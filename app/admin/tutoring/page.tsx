@@ -94,8 +94,9 @@ export default async function AdminTutoringPage() {
       {/* Tutor Management */}
       <div className="mb-8">
         <h2 className="font-headline-md text-headline-md text-text-primary font-extrabold mb-4">Tutor Management ({allTutors.length})</h2>
-        <div className="rounded-2xl bg-gradient-to-br from-white to-purple-50 shadow-xl border-4 border-purple-100 overflow-hidden">
-          <table className="w-full">
+        {/* Tutor list - scrolls horizontally on narrow screens. */}
+        <div className="rounded-2xl bg-gradient-to-br from-white to-purple-50 shadow-xl border-4 border-purple-100 overflow-x-auto">
+          <table className="w-full min-w-[640px]">
             <thead className="bg-gradient-to-r from-purple-500 to-pink-500 border-b-4 border-purple-200">
               <tr>
                 <th className="px-4 py-3 text-left font-label-md font-semibold text-white">Tutor</th>
@@ -168,8 +169,9 @@ export default async function AdminTutoringPage() {
       {/* Session Oversight */}
       <div>
         <h2 className="font-headline-md text-headline-md text-text-primary font-extrabold mb-4">Recent Sessions (Last 50)</h2>
-        <div className="rounded-2xl bg-gradient-to-br from-white to-purple-50 shadow-xl border-4 border-purple-100 overflow-hidden">
-          <table className="w-full">
+        {/* Session list - scrolls horizontally on narrow screens. */}
+        <div className="rounded-2xl bg-gradient-to-br from-white to-purple-50 shadow-xl border-4 border-purple-100 overflow-x-auto">
+          <table className="w-full min-w-[720px]">
             <thead className="bg-gradient-to-r from-indigo-500 to-purple-500 border-b-4 border-indigo-200">
               <tr>
                 <th className="px-4 py-3 text-left font-label-md font-semibold text-white">Session ID</th>

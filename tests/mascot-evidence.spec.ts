@@ -1,14 +1,11 @@
+import { loginAs } from './auth';
 import { test, expect }
  from '@playwright/test';
 
 test.describe('Mascot Evidence Screenshots', () => {
   test.beforeEach(async ({ page }) => {
     // Login as test learner
-    await page.goto('/sign-in');
-    await page.fill('input[type="email"]', 'testlearner+test@gmail.com');
-    await page.fill('input[type="password"]', 'Test123456!');
-    await page.click('button[type="submit"]');
-    await page.waitForURL('/path', { timeout: 15000 });
+    await loginAs(page, 'learner');
   });
 
   test('screenshot chat widget collapsed', async ({ page }) => {

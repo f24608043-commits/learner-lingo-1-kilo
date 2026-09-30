@@ -1,12 +1,10 @@
 import { test, expect } from '@playwright/test';
+import { loginAs } from './auth';
 
 test.describe('Mascot Chat Feature', () => {
   test.beforeEach(async ({ page }) => {
     // Login as test learner
-    await page.goto('/sign-in');
-    await page.fill('input[type="email"]', 'testlearner+test@gmail.com');
-    await page.fill('input[type="password"]', 'Test123456!');
-    await page.click('button[type="submit"]');
+    await loginAs(page, 'learner');
     
     // Handle onboarding redirect
     const url = page.url();
@@ -118,17 +116,17 @@ test.describe('Mascot Chat Feature', () => {
 });
 
 test.describe('Mascot Chat API - Failure Scenarios', () => {
-  test('OpenRouter failure falls back to canned response', async ({ page }) => {
-    // This test would require temporarily invalidating the OpenRouter key
-    // For now, we'll test the API endpoint directly
-    
+  test('OpenRouter failure falls back to canned response', async ({ page, request }) => {
+    // Login so the API request carries valid auth cookies
+    await loginAs(page, 'learner');
+
     const response = await page.request.post('/api/mascot-chat', {
       data: {
         message: 'Test message',
         simulateOpenRouterFailure: true,
       },
     });
-    
+
     const data = await response.json();
     expect(response.ok()).toBeTruthy();
     expect(data.message).toBeTruthy();
@@ -136,6 +134,8 @@ test.describe('Mascot Chat API - Failure Scenarios', () => {
   });
 
   test('OpenAI failure falls back to canned response', async ({ page }) => {
+    await loginAs(page, 'learner');
+
     const response = await page.request.post('/api/mascot-chat', {
       data: {
         message: 'Test message',
@@ -143,7 +143,7 @@ test.describe('Mascot Chat API - Failure Scenarios', () => {
         simulateOpenAiFailure: true,
       },
     });
-    
+
     const data = await response.json();
     expect(response.ok()).toBeTruthy();
     expect(data.message).toBeTruthy();

@@ -8,11 +8,14 @@ dotenv.config({ path: envPath });
 
 export default defineConfig({
   testDir: './tests',
+  globalSetup: './tests/global-setup.ts',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
-  reporter: 'html',
+  reporter: process.env.PW_JSON
+    ? [['list'], ['json', { outputFile: '.pw-report.json' }]]
+    : [['list']],
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',

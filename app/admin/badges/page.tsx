@@ -20,9 +20,9 @@ export default async function AdminBadgesPage() {
     .where(eq(profiles.id, user.id))
     .limit(1);
 
-  if (!userProfile || userProfile.role !== 'admin') {
-    redirect("/path");
-  }
+    if (!userProfile || userProfile.role !== 'admin') {
+      redirect("/");
+    }
 
   const badges = await getAllBadges();
 
@@ -42,6 +42,7 @@ export default async function AdminBadgesPage() {
             name: formData.get("name") as string,
             description: formData.get("description") as string,
             icon: formData.get("icon") as string,
+            category: formData.get("category") as "academic" | "participation" | "behavior" | "achievement" | "milestone" | "social",
             criteriaType: formData.get("criteriaType") as "first_lesson" | "lessons_completed" | "course_complete" | "streak_days" | "xp_earned",
             criteriaValue: parseInt(formData.get("criteriaValue") as string),
           };
@@ -82,7 +83,7 @@ export default async function AdminBadgesPage() {
               suppressHydrationWarning={true}
             />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
               <label className="block font-label-md text-text-primary font-semibold mb-1">Criteria Type</label>
               <select
@@ -95,6 +96,23 @@ export default async function AdminBadgesPage() {
                 <option value="lessons_completed">Lessons Completed</option>
                 <option value="streak_days">Streak Days</option>
                 <option value="course_complete">Course Complete</option>
+                <option value="xp_earned">XP Earned</option>
+              </select>
+            </div>
+            <div>
+              <label className="block font-label-md text-text-primary font-semibold mb-1">Category</label>
+              <select
+                name="category"
+                required
+                className="w-full px-3 py-2 border-4 border-orange-200 rounded-xl bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 shadow-lg"
+                suppressHydrationWarning={true}
+              >
+                <option value="academic">Academic</option>
+                <option value="participation">Participation</option>
+                <option value="behavior">Behavior</option>
+                <option value="achievement">Achievement</option>
+                <option value="milestone">Milestone</option>
+                <option value="social">Social</option>
               </select>
             </div>
             <div>
@@ -118,14 +136,16 @@ export default async function AdminBadgesPage() {
         </form>
       </div>
 
-      {/* Badges List */}
-      <div className="rounded-2xl bg-gradient-to-br from-white to-orange-50 shadow-xl border-4 border-orange-100 overflow-hidden">
-        <table className="w-full">
+      {/* Badges List - scrolls horizontally on narrow screens so no columns
+          are clipped out of reach on mobile. */}
+      <div className="rounded-2xl bg-gradient-to-br from-white to-orange-50 shadow-xl border-4 border-orange-100 overflow-x-auto">
+        <table className="w-full min-w-[720px]">
           <thead className="bg-gradient-to-r from-orange-500 to-red-500 border-b-4 border-orange-200">
             <tr>
               <th className="px-6 py-3 text-left font-label-md font-semibold text-white">Icon</th>
               <th className="px-6 py-3 text-left font-label-md font-semibold text-white">Name</th>
               <th className="px-6 py-3 text-left font-label-md font-semibold text-white">Description</th>
+              <th className="px-6 py-3 text-left font-label-md font-semibold text-white">Category</th>
               <th className="px-6 py-3 text-left font-label-md font-semibold text-white">Criteria</th>
               <th className="px-6 py-3 text-left font-label-md font-semibold text-white">Actions</th>
             </tr>
@@ -133,16 +153,17 @@ export default async function AdminBadgesPage() {
           <tbody>
             {badges.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-text-muted">
+                <td colSpan={6} className="px-6 py-8 text-center text-text-muted">
                   No badges found
                 </td>
               </tr>
             ) : (
               badges.map((badge: any) => (
                 <tr key={badge.id} className="border-b-4 border-orange-100 hover:bg-orange-50 transition-colors">
-                  <td className="px-6 py-4 text-2xl">{badge.icon}</td>
+                  <td className="px-6 py-4 text-2xl">{badge.iconUrl}</td>
                   <td className="px-6 py-4 font-label-md font-semibold text-text-primary">{badge.name}</td>
                   <td className="px-6 py-4 font-body-sm text-text-muted">{badge.description}</td>
+                  <td className="px-6 py-4 font-body-sm text-text-muted capitalize">{badge.category}</td>
                   <td className="px-6 py-4 font-body-sm text-text-primary">
                     {badge.criteriaType}: {badge.criteriaValue}
                   </td>

@@ -1,9 +1,7 @@
 import { test, expect } from '@playwright/test';
+import { loginAs } from './auth';
 
 test.describe('Performance Measurement - Messaging Impact', () => {
-  const TUTOR_EMAIL = 'orphix.itsolutions@gmail.com';
-  const TUTOR_PASSWORD = 'Qasim.11';
-
   test('measure /messages page load time', async ({ page }) => {
     test.skip(true, 'Auth issues - skipping for now');
   });
@@ -18,13 +16,7 @@ test.describe('Performance Measurement - Messaging Impact', () => {
 
   test('measure bundle size impact', async ({ page }) => {
     // This test checks the JavaScript bundle size by looking at network requests
-    await page.goto('/sign-in');
-    await page.waitForLoadState('networkidle');
-    await page.fill('input[name="email"]', TUTOR_EMAIL);
-    await page.fill('input[name="password"]', TUTOR_PASSWORD);
-    await page.click('button[type="submit"]');
-    
-    await expect(page).toHaveURL(/\/tutoring\/dashboard|\/path/, { timeout: 15000 });
+    await loginAs(page, 'tutor');
 
     // Navigate to messages and capture network requests
     const jsRequests: any[] = [];
@@ -44,7 +36,9 @@ test.describe('Performance Measurement - Messaging Impact', () => {
     });
 
     await page.goto('/messages');
-    await page.waitForLoadState('networkidle');
+    // 'networkidle' never settles: the shell polls /api/tutoring/reminders.
+    await page.waitForLoadState('load');
+    await page.waitForTimeout(3000);
 
     // Calculate total JS size
     const totalSize = jsRequests.reduce((sum, req) => sum + req.size, 0);

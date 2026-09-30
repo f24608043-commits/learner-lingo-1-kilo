@@ -8,8 +8,8 @@ test.describe('Login Time Measurement', () => {
     await page.waitForLoadState('domcontentloaded', { timeout: 15000 });
     
     // Fill in credentials
-    await page.fill('input[type="email"]', 'testlearner+test@gmail.com');
-    await page.fill('input[type="password"]', 'Test123456!');
+    await page.fill('input[type="email"]', 'learner@gmail.com');
+    await page.fill('input[type="password"]', 'learner@1221');
     
     // Click submit and measure time to reach path page
     const submitStartTime = Date.now();

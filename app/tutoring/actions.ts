@@ -54,6 +54,7 @@ export async function createTutorProfile(data: {
   });
 
   revalidatePath("/tutoring");
+  revalidatePath("/tutoring/dashboard");
   return { success: true };
 }
 
@@ -1286,14 +1287,16 @@ export async function getGroupSessions(groupId: string) {
   }
 
   const isTutor = group.tutorId === user.id;
-  const isMember = !isTutor && await db
-    .select()
-    .from(groupMembers)
-    .where(and(eq(groupMembers.groupId, groupId), eq(groupMembers.learnerId, user.id)))
-    .limit(1);
+  if (!isTutor) {
+    const membership = await db
+      .select()
+      .from(groupMembers)
+      .where(and(eq(groupMembers.groupId, groupId), eq(groupMembers.learnerId, user.id)))
+      .limit(1);
 
-  if (!isTutor && !isMember.length) {
-    return [];
+    if (!membership.length) {
+      return [];
+    }
   }
 
   const sessions = await db

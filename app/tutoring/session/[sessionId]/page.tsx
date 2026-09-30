@@ -38,8 +38,22 @@ export default async function SessionPage({ params }: { params: Promise<{ sessio
 
   return (
     <SessionPageClient
-      session={session}
-      notes={notes || []}
+      session={{
+        id: session.id,
+        tutorId: session.tutorId,
+        learnerId: session.learnerId,
+        scheduledAt: new Date(session.scheduledAt).toISOString(),
+        durationMins: session.durationMins,
+        status: session.status,
+        jitsiRoomId: session.jitsiRoomId,
+      }}
+      notes={(notes || []).map((note) => ({
+        id: note.id,
+        noteText: note.noteText,
+        visibility: note.visibility,
+        createdAt: new Date(note.createdAt).toISOString(),
+        authorId: note.authorId,
+      }))}
       isTutor={isTutor}
       currentUserId={user.id}
     />

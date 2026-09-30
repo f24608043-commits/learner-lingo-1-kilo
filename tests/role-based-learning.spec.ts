@@ -1,18 +1,15 @@
 import { test, expect } from '@playwright/test';
+import { loginAs } from './auth';
 
 test.describe('Role-Based Learning Methods - Admin Learner Flow', () => {
-  const ADMIN_EMAIL = 'alexabraham587@gmail.com';
-  const ADMIN_PASSWORD = 'Qasim.11';
-  const LEARNER_EMAIL = 'testlearner+test@gmail.com';
-  const LEARNER_PASSWORD = 'Test123456!';
+  const ADMIN_EMAIL = 'admin@gmail.com';
+  const ADMIN_PASSWORD = 'admin@1221';
+  const LEARNER_EMAIL = 'learner@gmail.com';
+  const LEARNER_PASSWORD = 'learner@1221';
 
   test('Admin can create course and learner can access it', async ({ page }) => {
     // Login as admin
-    await page.goto('/sign-in');
-    await page.fill('input[type="email"]', ADMIN_EMAIL);
-    await page.fill('input[type="password"]', ADMIN_PASSWORD);
-    await page.click('button[type="submit"]');
-    await page.waitForURL('/admin', { timeout: 30000 });
+    await loginAs(page, 'admin');
 
     // Navigate to courses
     await page.goto('/admin/courses');
@@ -24,10 +21,7 @@ test.describe('Role-Based Learning Methods - Admin Learner Flow', () => {
     console.log(`Courses visible to admin: ${count}`);
 
     // Login as learner
-    await page.goto('/sign-in');
-    await page.fill('input[type="email"]', LEARNER_EMAIL);
-    await page.fill('input[type="password"]', LEARNER_PASSWORD);
-    await page.click('button[type="submit"]');
+    await loginAs(page, 'learner');
     
     // Handle onboarding redirect
     const url = page.url();
@@ -49,10 +43,7 @@ test.describe('Role-Based Learning Methods - Admin Learner Flow', () => {
   });
 
   test('Learner can complete lesson and earn XP', async ({ page }) => {
-    await page.goto('/sign-in');
-    await page.fill('input[type="email"]', LEARNER_EMAIL);
-    await page.fill('input[type="password"]', LEARNER_PASSWORD);
-    await page.click('button[type="submit"]');
+    await loginAs(page, 'learner');
     
     // Handle onboarding redirect
     const url = page.url();
@@ -66,13 +57,14 @@ test.describe('Role-Based Learning Methods - Admin Learner Flow', () => {
 
     // Navigate to a lesson
     await page.goto('/library');
-    await page.waitForLoadState('networkidle');
+    // 'networkidle' never settles here: the shell polls /api/tutoring/reminders.
+    await page.waitForLoadState('load');
 
     // Try to find and click a lesson
     const lessonButton = page.locator('a[href*="/lesson/"]').first();
     if (await lessonButton.isVisible({ timeout: 5000 })) {
       await lessonButton.click();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
       
       // Check lesson page loads
       await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 10000 });
@@ -84,18 +76,14 @@ test.describe('Role-Based Learning Methods - Admin Learner Flow', () => {
 });
 
 test.describe('Role-Based Learning Methods - Tutor Learner Flow', () => {
-  const TUTOR_EMAIL = 'orphix.itsolutions@gmail.com';
-  const TUTOR_PASSWORD = 'Qasim.11';
-  const LEARNER_EMAIL = 'testlearner+test@gmail.com';
-  const LEARNER_PASSWORD = 'Test123456!';
+  const TUTOR_EMAIL = 'tutor@gmail.com';
+  const TUTOR_PASSWORD = 'admin@1221';
+  const LEARNER_EMAIL = 'learner@gmail.com';
+  const LEARNER_PASSWORD = 'learner@1221';
 
   test('Tutor can set availability and learner can book session', async ({ page }) => {
     // Login as tutor
-    await page.goto('/sign-in');
-    await page.fill('input[type="email"]', TUTOR_EMAIL);
-    await page.fill('input[type="password"]', TUTOR_PASSWORD);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/tutoring\/dashboard|\/path/, { timeout: 15000 });
+    await loginAs(page, 'tutor');
 
     // Check tutor dashboard
     await page.goto('/tutoring/dashboard');
@@ -103,10 +91,7 @@ test.describe('Role-Based Learning Methods - Tutor Learner Flow', () => {
     console.log('Tutor dashboard loaded');
 
     // Login as learner
-    await page.goto('/sign-in');
-    await page.fill('input[type="email"]', LEARNER_EMAIL);
-    await page.fill('input[type="password"]', LEARNER_PASSWORD);
-    await page.click('button[type="submit"]');
+    await loginAs(page, 'learner');
     
     // Handle onboarding redirect
     const url = page.url();
@@ -135,10 +120,7 @@ test.describe('Role-Based Learning Methods - Tutor Learner Flow', () => {
 
   test('Messaging works between tutor and learner', async ({ page }) => {
     // Login as learner
-    await page.goto('/sign-in');
-    await page.fill('input[type="email"]', LEARNER_EMAIL);
-    await page.fill('input[type="password"]', LEARNER_PASSWORD);
-    await page.click('button[type="submit"]');
+    await loginAs(page, 'learner');
     
     // Handle onboarding redirect
     const url = page.url();
@@ -163,31 +145,23 @@ test.describe('Role-Based Learning Methods - Tutor Learner Flow', () => {
 });
 
 test.describe('Cross-Role Feature Access', () => {
-  const ADMIN_EMAIL = 'alexabraham587@gmail.com';
-  const ADMIN_PASSWORD = 'Qasim.11';
-  const TUTOR_EMAIL = 'orphix.itsolutions@gmail.com';
-  const TUTOR_PASSWORD = 'Qasim.11';
-  const LEARNER_EMAIL = 'testlearner+test@gmail.com';
-  const LEARNER_PASSWORD = 'Test123456!';
+  const ADMIN_EMAIL = 'admin@gmail.com';
+  const ADMIN_PASSWORD = 'admin@1221';
+  const TUTOR_EMAIL = 'tutor@gmail.com';
+  const TUTOR_PASSWORD = 'admin@1221';
+  const LEARNER_EMAIL = 'learner@gmail.com';
+  const LEARNER_PASSWORD = 'learner@1221';
 
   test('Admin can access admin pages, tutor cannot', async ({ page }) => {
     // Admin access
-    await page.goto('/sign-in');
-    await page.fill('input[type="email"]', ADMIN_EMAIL);
-    await page.fill('input[type="password"]', ADMIN_PASSWORD);
-    await page.click('button[type="submit"]');
-    await page.waitForURL('/admin', { timeout: 30000 });
+    await loginAs(page, 'admin');
 
     await page.goto('/admin/courses');
     await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 10000 });
     console.log('✅ Admin can access /admin/courses');
 
     // Tutor access (should be blocked or redirected)
-    await page.goto('/sign-in');
-    await page.fill('input[type="email"]', TUTOR_EMAIL);
-    await page.fill('input[type="password"]', TUTOR_PASSWORD);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/tutoring\/dashboard|\/path/, { timeout: 30000 });
+    await loginAs(page, 'tutor');
 
     await page.goto('/admin/courses');
     await page.waitForURL(/\/path|\/tutoring\/dashboard|\/\?error=/, { timeout: 15000 });
@@ -200,10 +174,7 @@ test.describe('Cross-Role Feature Access', () => {
   });
 
   test('Learner can access learning pages, not admin pages', async ({ page }) => {
-    await page.goto('/sign-in');
-    await page.fill('input[type="email"]', LEARNER_EMAIL);
-    await page.fill('input[type="password"]', LEARNER_PASSWORD);
-    await page.click('button[type="submit"]');
+    await loginAs(page, 'learner');
     
     // Handle onboarding redirect
     const url = page.url();

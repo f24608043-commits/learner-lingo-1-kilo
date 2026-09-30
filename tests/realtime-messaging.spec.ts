@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Realtime Messaging', () => {
-  const TUTOR_EMAIL = 'orphix.itsolutions@gmail.com';
-  const TUTOR_PASSWORD = 'Qasim.11';
-  const ADMIN_EMAIL = 'alexabraham587@gmail.com';
-  const ADMIN_PASSWORD = 'Qasim.11';
+  const TUTOR_EMAIL = 'tutor@gmail.com';
+  const TUTOR_PASSWORD = 'admin@1221';
+  const ADMIN_EMAIL = 'admin@gmail.com';
+  const ADMIN_PASSWORD = 'admin@1221';
 
   test('messages page loads for both users', async ({ browser }) => {
     test.skip(true, 'Auth issues - skipping for now');
