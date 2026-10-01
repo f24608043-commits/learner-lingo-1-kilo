@@ -11,6 +11,7 @@ import {
   jsonb,
   unique,
   check,
+  varchar,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -365,6 +366,13 @@ export const tutorEnrollments = pgTable(
 );
 
 // ── 18. GROUPS ───────────────────────────────────────────────
+export const groupPrivacyEnum = pgEnum("group_privacy", [
+  "private",
+  "public",
+  "invite_only",
+  "archived",
+]);
+
 export const groups = pgTable("groups", {
   id: uuid("id").primaryKey().defaultRandom(),
   tutorId: uuid("tutor_id")
@@ -372,11 +380,22 @@ export const groups = pgTable("groups", {
     .references(() => profiles.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   description: text("description"),
+  subject: text("subject"),
+  gradeLevel: text("grade_level"),
+  coverImageUrl: text("cover_image_url"),
+  groupCode: varchar("group_code", { length: 10 }),
+  privacy: groupPrivacyEnum("privacy").notNull().default("private"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 // ── 19. GROUP_MEMBERS ────────────────────────────────────────
+export const groupMemberRoleEnum = pgEnum("group_member_role", [
+  "tutor",
+  "co_tutor",
+  "student",
+]);
+
 export const groupMembers = pgTable(
   "group_members",
   {
@@ -387,6 +406,7 @@ export const groupMembers = pgTable(
     learnerId: uuid("learner_id")
       .notNull()
       .references(() => profiles.id, { onDelete: "cascade" }),
+    role: groupMemberRoleEnum("role").notNull().default("student"),
     enrolledAt: timestamp("enrolled_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [unique().on(t.groupId, t.learnerId)]

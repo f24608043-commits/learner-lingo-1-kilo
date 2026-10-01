@@ -81,9 +81,9 @@
   --radius-4xl: 2rem;
   --radius-full: 9999px;
 
-  /* ── Font Families ── */
-  --font-rubik: var(--font-rubik), sans-serif;
-  --font-nunito-sans: var(--font-nunito-sans), sans-serif;
+  /* Font family utilities live in the separate `@theme inline` block below.
+     Declaring them here as var(--font-rubik) would be self-referential, and a
+     cyclic custom property resolves to the guaranteed-invalid value. */
 
   /* ── Font Sizes ── */
   --text-headline-xl: 2rem;
@@ -169,6 +169,29 @@
   }
   @keyframes fill-bar {
     from { width: 0%; }
+  }
+}
+
+/* next/font exposes --font-rubik / --font-nunito-sans on <html> from
+   app/layout.tsx. `inline` makes these utilities emit the variable reference
+   directly instead of re-reading the theme variable, which would cycle. */
+@theme inline {
+  --font-rubik: var(--font-rubik);
+  --font-nunito-sans: var(--font-nunito-sans);
+}
+
+@layer base {
+  body {
+    font-family: var(--font-nunito-sans), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
   }
 }
 
