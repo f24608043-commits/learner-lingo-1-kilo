@@ -485,6 +485,12 @@ export const notificationTypeEnum = pgEnum("notification_type", [
   "badge_awarded",
   "message_received",
   "group_invite",
+  "assignment_published",
+  "assignment_due_soon",
+  "submission_received",
+  "submission_graded",
+  "quiz_published",
+  "quiz_graded",
   "system",
 ]);
 
@@ -649,3 +655,267 @@ export const userRanks = pgTable("user_ranks", {
   metrics: jsonb("metrics"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ── 29. CLASSROOM: ASSIGNMENTS ────────────────────────────────
+export const assignmentStatusEnum = pgEnum("assignment_status", [
+  "draft",
+  "published",
+  "archived",
+]);
+
+export const submissionStatusEnum = pgEnum("submission_status", [
+  "draft",
+  "submitted",
+  "graded",
+  "returned",
+  "late",
+]);
+
+export const assignments = pgTable("assignments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  groupId: uuid("group_id")
+    .notNull()
+    .references(() => groups.id, { onDelete: "cascade" }),
+  tutorId: uuid("tutor_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "cascade" }),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  instructions: text("instructions"),
+  dueDate: timestamp("due_date", { withTimezone: true }),
+  availableFrom: timestamp("available_from", { withTimezone: true }),
+  points: integer("points").notNull().default(100),
+  status: assignmentStatusEnum("status").notNull().default("draft"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const assignmentAttachments = pgTable("assignment_attachments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  assignmentId: uuid("assignment_id")
+    .notNull()
+    .references(() => assignments.id, { onDelete: "cascade" }),
+  fileUrl: text("file_url").notNull(),
+  fileName: varchar("file_name", { length: 255 }),
+  fileType: varchar("file_type", { length: 50 }),
+  fileSize: integer("file_size"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ── 30. CLASSROOM: SUBMISSIONS ───────────────────────────────
+export const submissions = pgTable(
+  "submissions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    assignmentId: uuid("assignment_id")
+      .notNull()
+      .references(() => assignments.id, { onDelete: "cascade" }),
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    textAnswer: text("text_answer"),
+    submittedAt: timestamp("submitted_at", { withTimezone: true }),
+    status: submissionStatusEnum("status").notNull().default("draft"),
+    pointsEarned: integer("points_earned"),
+    feedback: text("feedback"),
+    gradedBy: uuid("graded_by").references(() => profiles.id, { onDelete: "set null" }),
+    gradedAt: timestamp("graded_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.assignmentId, t.studentId)]
+);
+
+export const submissionAttachments = pgTable("submission_attachments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  submissionId: uuid("submission_id")
+    .notNull()
+    .references(() => submissions.id, { onDelete: "cascade" }),
+  fileUrl: text("file_url").notNull(),
+  fileName: varchar("file_name", { length: 255 }),
+  fileType: varchar("file_type", { length: 50 }),
+  fileSize: integer("file_size"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ── 31. CLASSROOM: QUIZZES ───────────────────────────────────
+export const quizQuestionTypeEnum = pgEnum("quiz_question_type", [
+  "multiple_choice",
+  "true_false",
+  "short_answer",
+  "essay",
+]);
+
+export const quizzes = pgTable("quizzes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  assignmentId: uuid("assignment_id")
+    .notNull()
+    .references(() => assignments.id, { onDelete: "cascade" }),
+  timeLimitMinutes: integer("time_limit_minutes"),
+  allowRetakes: boolean("allow_retakes").notNull().default(false),
+  maxAttempts: integer("max_attempts").notNull().default(1),
+  randomizeQuestions: boolean("randomize_questions").notNull().default(false),
+  randomizeOptions: boolean("randomize_options").notNull().default(false),
+  showResultsAfter: boolean("show_results_after").notNull().default(true),
+  passingScore: integer("passing_score"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const quizQuestions = pgTable("quiz_questions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  quizId: uuid("quiz_id")
+    .notNull()
+    .references(() => quizzes.id, { onDelete: "cascade" }),
+  questionType: quizQuestionTypeEnum("question_type").notNull().default("multiple_choice"),
+  questionText: text("question_text").notNull(),
+  points: integer("points").notNull().default(1),
+  orderIndex: integer("order_index").notNull().default(0),
+  correctText: text("correct_text"),
+  explanation: text("explanation"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const quizOptions = pgTable("quiz_options", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  questionId: uuid("question_id")
+    .notNull()
+    .references(() => quizQuestions.id, { onDelete: "cascade" }),
+  optionText: text("option_text").notNull(),
+  isCorrect: boolean("is_correct").notNull().default(false),
+  orderIndex: integer("order_index").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const quizAttempts = pgTable(
+  "quiz_attempts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    quizId: uuid("quiz_id")
+      .notNull()
+      .references(() => quizzes.id, { onDelete: "cascade" }),
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    attemptNumber: integer("attempt_number").notNull().default(1),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    score: integer("score").notNull().default(0),
+    maxScore: integer("max_score"),
+    passed: boolean("passed"),
+  },
+  (t) => [unique().on(t.quizId, t.studentId, t.attemptNumber)]
+);
+
+export const quizAnswers = pgTable(
+  "quiz_answers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    attemptId: uuid("attempt_id")
+      .notNull()
+      .references(() => quizAttempts.id, { onDelete: "cascade" }),
+    questionId: uuid("question_id")
+      .notNull()
+      .references(() => quizQuestions.id, { onDelete: "cascade" }),
+    selectedOptionId: uuid("selected_option_id").references(() => quizOptions.id, {
+      onDelete: "set null",
+    }),
+    textAnswer: text("text_answer"),
+    isCorrect: boolean("is_correct"),
+    pointsEarned: integer("points_earned"),
+    autoGraded: boolean("auto_graded").notNull().default(true),
+    feedback: text("feedback"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.attemptId, t.questionId)]
+);
+
+// ── 32. CLASSROOM: ANNOUNCEMENTS & COMMENTS ──────────────────
+export const groupAnnouncements = pgTable("group_announcements", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  groupId: uuid("group_id")
+    .notNull()
+    .references(() => groups.id, { onDelete: "cascade" }),
+  tutorId: uuid("tutor_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "cascade" }),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content"),
+  mentionUserIds: uuid("mention_user_ids")
+    .array()
+    .notNull()
+    .default(sql`'{}'::uuid[]`),
+  pinned: boolean("pinned").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const commentTargetTypeEnum = pgEnum("comment_target_type", [
+  "group",
+  "announcement",
+  "assignment",
+]);
+
+export const groupComments = pgTable("group_comments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  groupId: uuid("group_id")
+    .notNull()
+    .references(() => groups.id, { onDelete: "cascade" }),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "cascade" }),
+  targetType: commentTargetTypeEnum("target_type").notNull().default("group"),
+  targetId: uuid("target_id"),
+  content: text("content").notNull(),
+  parentId: uuid("parent_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ── 33. CLASSROOM: REVIEWS & ENROLLMENT REQUESTS ─────────────
+export const tutorReviews = pgTable(
+  "tutor_reviews",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tutorId: uuid("tutor_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    rating: integer("rating").notNull(),
+    reviewText: text("review_text"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique().on(t.tutorId, t.studentId),
+    check("tutor_reviews_rating_check", sql`${t.rating} >= 1 AND ${t.rating} <= 5`),
+  ]
+);
+
+export const enrollmentRequestStatusEnum = pgEnum("enrollment_request_status", [
+  "pending",
+  "approved",
+  "rejected",
+  "cancelled",
+]);
+
+export const enrollmentRequests = pgTable(
+  "enrollment_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => groups.id, { onDelete: "cascade" }),
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    status: enrollmentRequestStatusEnum("status").notNull().default("pending"),
+    requestedAt: timestamp("requested_at", { withTimezone: true }).notNull().defaultNow(),
+    respondedAt: timestamp("responded_at", { withTimezone: true }),
+    responseMessage: text("response_message"),
+  },
+  (t) => [unique().on(t.groupId, t.studentId)]
+);

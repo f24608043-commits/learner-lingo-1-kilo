@@ -1,10 +1,13 @@
 "use server";
 
 import { db } from "@/db";
-import { notifications, profiles } from "@/db/schema";
+import { notifications, notificationTypeEnum, profiles } from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+
+// Derived from the enum so the two can never drift apart.
+export type NotificationType = (typeof notificationTypeEnum.enumValues)[number];
 
 export async function createNotification({
   userId,
@@ -14,7 +17,7 @@ export async function createNotification({
   data,
 }: {
   userId: string;
-  type: "friend_request" | "friend_accepted" | "badge_earned" | "streak_milestone" | "lesson_completed" | "leaderboard_rank";
+  type: NotificationType;
   title: string;
   message: string;
   data?: any;

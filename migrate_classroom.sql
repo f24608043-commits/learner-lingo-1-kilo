@@ -776,3 +776,12 @@ CREATE POLICY "Owners can delete their classwork files" ON storage.objects
     bucket_id = 'classwork'
     AND auth.uid()::text = (storage.foldername(name))[1]
   );
+
+-- ── Notification types for classroom activity ───────────────────
+-- Kept in sync with notificationTypeEnum in db/schema.ts. Idempotent.
+ALTER TYPE notification_type ADD VALUE IF NOT EXISTS 'assignment_published';
+ALTER TYPE notification_type ADD VALUE IF NOT EXISTS 'assignment_due_soon';
+ALTER TYPE notification_type ADD VALUE IF NOT EXISTS 'submission_received';
+ALTER TYPE notification_type ADD VALUE IF NOT EXISTS 'submission_graded';
+ALTER TYPE notification_type ADD VALUE IF NOT EXISTS 'quiz_published';
+ALTER TYPE notification_type ADD VALUE IF NOT EXISTS 'quiz_graded';
