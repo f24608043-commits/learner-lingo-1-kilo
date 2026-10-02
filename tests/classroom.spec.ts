@@ -29,6 +29,14 @@ test.afterAll(async () => {
  */
 
 test.describe('Groups hub', () => {
+  test('groups is linked from the navigation for every role', async ({ page }) => {
+    // The classroom feature has to be reachable from the shell, not just by URL.
+    for (const role of ['learner', 'tutor', 'admin'] as const) {
+      await loginAs(page, role);
+      await expect(page.locator('a[href="/groups"]').first()).toBeVisible({ timeout: 60000 });
+    }
+  });
+
   test('tutor sees their group listed', async ({ page }) => {
     await loginAs(page, 'tutor', '/groups');
 

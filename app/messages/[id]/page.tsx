@@ -5,7 +5,7 @@ import { getMessages, sendMessage, markRead, leaveGroup } from "../../messaging/
 import { createClient } from "@/utils/supabase/client";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 interface Message {
   message: {
@@ -25,6 +25,7 @@ export default function MessageThreadPage({ params }: { params: Promise<{ id: st
   // has to be unwrapped. Reading `params.id` directly yields undefined, which
   // silently broke loading, markRead and every send.
   const { id: conversationId } = use(params);
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -52,7 +53,9 @@ export default function MessageThreadPage({ params }: { params: Promise<{ id: st
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
-          redirect("/sign-in");
+          // redirect() does not navigate from inside an effect or an event
+          // handler, so this left visitors on a page that never stopped loading.
+          router.replace("/sign-in");
           return;
         }
 
@@ -192,7 +195,7 @@ export default function MessageThreadPage({ params }: { params: Promise<{ id: st
 
     try {
       await leaveGroup(conversationId);
-      redirect("/messages");
+      router.replace("/messages");
     } catch (error: any) {
       console.error("Error leaving group:", error);
       alert(error.message || "Failed to leave group");

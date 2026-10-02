@@ -92,8 +92,11 @@ test.describe('Messaging', () => {
   test('the conversation shows up in the recipient list with its last message', async ({ page }) => {
     await loginAs(page, 'tutor', '/messages');
 
-    await expect(page.getByTestId('conversation-item')).toHaveCount(1, { timeout: 60000 });
-    await expect(page.getByTestId('conversation-item').first()).toContainText(TEXT);
+    // The tutor may have other conversations, so match our own thread rather
+    // than counting rows.
+    const entry = page.locator(`a[href="/messages/${conversationId}"]`);
+    await expect(entry).toBeVisible({ timeout: 60000 });
+    await expect(entry).toContainText(TEXT);
   });
 
   test('chat button on a friends card opens the conversation', async ({ page }) => {
@@ -134,7 +137,13 @@ test.describe('Messaging', () => {
 
     const result = page.getByTestId('friend-search-result').filter({ hasText: 'LEGO Learner' });
     await expect(result).toBeVisible({ timeout: 60000 });
-    await result.getByTestId('friend-add-button').click();
+
+    // These buttons submit a server action as a real form post, so the click
+    // navigates. Waiting for the load keeps the next goto from cancelling it.
+    await Promise.all([
+      page.waitForLoadState('load'),
+      result.getByTestId('friend-add-button').click(),
+    ]);
 
     // The requester no longer sees them as addable.
     await gotoRedirectSafe(page, '/friends?query=LEGO%20Learner', 60000);
@@ -157,7 +166,10 @@ test.describe('Messaging', () => {
 
     const pending = page.getByTestId('pending-request').filter({ hasText: 'Second Tutor' });
     await expect(pending).toBeVisible({ timeout: 60000 });
-    await pending.getByRole('button', { name: 'Accept' }).click();
+    await Promise.all([
+      page.waitForLoadState('load'),
+      pending.getByRole('button', { name: 'Accept' }).click(),
+    ]);
 
     const card = page.getByTestId('friend-card').filter({ hasText: 'Second Tutor' });
     await expect(card).toBeVisible({ timeout: 60000 });

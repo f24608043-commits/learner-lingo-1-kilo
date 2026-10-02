@@ -73,7 +73,9 @@ test.describe('Messaging System', () => {
       60000
     );
 
-    expect(page.url()).toContain('/sign-in');
+    // The thread resolves the session on the client before it can redirect, so
+    // the URL only changes after that check returns.
+    await expect(page).toHaveURL(/\/sign-in/, { timeout: 30000 });
   });
 
   test('course creation page loads', async ({ page }) => {
@@ -93,13 +95,16 @@ test.describe('Messaging System', () => {
   });
 
   test('tutoring page loads with tutor list', async ({ page }) => {
-    await loginAs(page, 'tutor', '/tutoring');
+    // A tutor's /tutoring redirects to their own dashboard, so the public tutor
+    // directory has to be checked as a learner.
+    await loginAs(page, 'learner', '/tutoring');
 
     await expect(
       page
         .locator('h2:has-text("Find a Tutor"), h2:has-text("Tutors"), h2:has-text("Tutor Directory")')
         .first()
     ).toBeVisible({ timeout: 60000 });
+    await expect(page.getByTestId('tutor-card').first()).toBeVisible({ timeout: 60000 });
   });
 
   test('profile page loads', async ({ page }) => {
