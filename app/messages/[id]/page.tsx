@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, use } from "react";
-import { getMessages, sendMessage, markRead, leaveGroup } from "../../messaging/actions";
+import { getMessages, getConversationForMember, sendMessage, markRead, leaveGroup } from "../../messaging/actions";
 import { createClient } from "@/utils/supabase/client";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import Link from "next/link";
@@ -33,6 +33,7 @@ export default function MessageThreadPage({ params }: { params: Promise<{ id: st
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [conversationType, setConversationType] = useState<"direct" | "group">("direct");
   const [jitsiRoomId, setJitsiRoomId] = useState<string | null>(null);
+  const [conversationTitle, setConversationTitle] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
@@ -61,10 +62,16 @@ export default function MessageThreadPage({ params }: { params: Promise<{ id: st
 
         setCurrentUser(user);
 
-        // Load messages
-        const initialMessages = await getMessages(conversationId);
+        // Load messages and the conversation header details together.
+        const [initialMessages, meta] = await Promise.all([
+          getMessages(conversationId),
+          getConversationForMember(conversationId),
+        ]);
         if (mounted) {
           setMessages(initialMessages);
+          setConversationType(meta.type);
+          setJitsiRoomId(meta.jitsiRoomId);
+          setConversationTitle(meta.title);
           setIsLoading(false);
         }
 
@@ -223,7 +230,7 @@ export default function MessageThreadPage({ params }: { params: Promise<{ id: st
           </Link>
           <div>
             <h1 className="font-headline-md text-headline-md text-on-surface font-extrabold">
-              {conversationType === "group" ? "Group Chat" : "Direct Message"}
+              {conversationType === "group" ? conversationTitle || "Group Chat" : "Direct Message"}
             </h1>
           </div>
         </div>

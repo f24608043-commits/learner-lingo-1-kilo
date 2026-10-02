@@ -6,6 +6,8 @@ import {
   getConversationIdByKey,
   countMessages,
   getMemberIds,
+  ensureGroupConversation,
+  TEST_GROUP_TITLE,
 } from './messaging-seed';
 
 const TEXT = 'PW messaging round trip';
@@ -180,5 +182,33 @@ test.describe('Messaging', () => {
     expect(page.url().split('/messages/')[1]).toBe(
       await getConversationIdByKey(learnerId, tutor2Id)
     );
+  });
+
+  test('a direct thread shows no class controls', async ({ page }) => {
+    await loginAs(page, 'learner', `/messages/${conversationId}`);
+
+    await expect(page.getByRole('heading', { name: 'Direct Message' })).toBeVisible({
+      timeout: 60000,
+    });
+    await expect(page.getByRole('link', { name: /Join Class/ })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Leave' })).toHaveCount(0);
+  });
+
+  test('a group thread shows its title with join and leave controls', async ({ page }) => {
+    const groupConversationId = await ensureGroupConversation([tutorId, learnerId]);
+
+    await loginAs(page, 'learner', `/messages/${groupConversationId}`);
+
+    // Previously the header never learned the conversation type, so every group
+    // chat claimed to be a direct message and hid these controls.
+    await expect(page.getByRole('heading', { name: TEST_GROUP_TITLE })).toBeVisible({
+      timeout: 60000,
+    });
+
+    const join = page.getByRole('link', { name: /Join Class/ });
+    await expect(join).toBeVisible();
+    await expect(join).toHaveAttribute('href', /meet\.jit\.si\/lego-class-pw-/);
+
+    await expect(page.getByRole('button', { name: 'Leave' })).toBeVisible();
   });
 });

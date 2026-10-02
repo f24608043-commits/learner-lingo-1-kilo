@@ -479,6 +479,36 @@ export async function sendMessage(conversationId: string, body: string) {
   return { success: true, message };
 }
 
+// Metadata for a single conversation, used by the thread header. Membership is
+// verified so a non-member cannot read even the header details.
+export async function getConversationForMember(conversationId: string) {
+  const user = await getCurrentUser();
+
+  const [row] = await db
+    .select({
+      id: conversations.id,
+      type: conversations.type,
+      title: conversations.title,
+      jitsiRoomId: conversations.jitsiRoomId,
+    })
+    .from(conversations)
+    .innerJoin(
+      conversationMembers,
+      and(
+        eq(conversationMembers.conversationId, conversations.id),
+        eq(conversationMembers.userId, user.id)
+      )
+    )
+    .where(eq(conversations.id, conversationId))
+    .limit(1);
+
+  if (!row) {
+    throw new Error("You are not a member of this conversation");
+  }
+
+  return row;
+}
+
 // Get messages for a conversation with pagination
 export async function getMessages(conversationId: string, cursor?: string, limit = 30) {
   const user = await getCurrentUser();

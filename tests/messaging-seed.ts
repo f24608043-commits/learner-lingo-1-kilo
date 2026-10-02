@@ -11,6 +11,9 @@ export const LEARNER_EMAIL = 'learner@gmail.com';
 export const TUTOR_EMAIL = 'tutor@gmail.com';
 export const TUTOR2_EMAIL = 'tutor2@gmail.com';
 
+/** Marker title so the seeded group thread can be found and removed. */
+export const TEST_GROUP_TITLE = '_pw_group_chat';
+
 export function directKey(a: string, b: string): string {
   return [a, b].sort().join('-');
 }
@@ -66,7 +69,12 @@ async function deleteSuiteConversations() {
       db
         .select({ id: conversations.id })
         .from(conversations)
-        .where(inArray(conversations.directKey, pairKeys))
+        .where(
+          or(
+            inArray(conversations.directKey, pairKeys),
+            eq(conversations.title, TEST_GROUP_TITLE)
+          )
+        )
     )
   ).map((c) => c.id);
 
@@ -122,6 +130,38 @@ export async function ensureDirectConversation(a: string, b: string): Promise<st
     { conversationId: conversation.id, userId: a, role: 'member' },
     { conversationId: conversation.id, userId: b, role: 'member' },
   ]);
+
+  return conversation.id;
+}
+
+/** Creates the group thread if it does not exist, matching createGroup. */
+export async function ensureGroupConversation(members: string[]): Promise<string> {
+  const [existing] = await withDbRetry(() =>
+    db
+      .select({ id: conversations.id })
+      .from(conversations)
+      .where(eq(conversations.title, TEST_GROUP_TITLE))
+      .limit(1)
+  );
+  if (existing) return existing.id;
+
+  const [conversation] = await db
+    .insert(conversations)
+    .values({
+      type: 'group',
+      title: TEST_GROUP_TITLE,
+      createdBy: members[0],
+      jitsiRoomId: `lego-class-pw-${Date.now()}`,
+    })
+    .returning();
+
+  await db.insert(conversationMembers).values(
+    members.map((userId, idx) => ({
+      conversationId: conversation.id,
+      userId,
+      role: idx === 0 ? 'admin' : 'member',
+    }))
+  );
 
   return conversation.id;
 }
