@@ -64,7 +64,7 @@ export function isTransientDbError(error: unknown): boolean {
  */
 export async function withDbRetry<T>(
   operation: () => Promise<T>,
-  attempts = 3,
+  attempts = 4,
 ): Promise<T> {
   let lastError: unknown;
 

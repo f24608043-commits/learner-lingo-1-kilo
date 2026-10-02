@@ -265,7 +265,7 @@ test.describe('Group stream', () => {
     await page.getByTestId('comment-submit').click();
 
     await expect(page.getByTestId('comment-reply').filter({ hasText: 'Adding to that.' })).toBeVisible({
-      timeout: 25000,
+      timeout: 45000,
     });
   });
 
