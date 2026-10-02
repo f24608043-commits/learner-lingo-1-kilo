@@ -4,6 +4,7 @@ import "./globals.css";
 import Shell from "@/components/Shell";
 import dynamic from "next/dynamic";
 import SWRegister from "@/components/SWRegister";
+import { Toaster } from "react-hot-toast";
 
 // Lazy load ChatWidget to avoid impacting initial bundle size
 const ChatWidget = dynamic(() => import("@/components/ChatWidget"), {
@@ -63,6 +64,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
          <Shell>{children}</Shell>
          <ChatWidget />
          <SWRegister />
+         <Toaster
+           position="top-center"
+           toastOptions={{
+             className: "!rounded-2xl !shadow-clay-surface",
+           }}
+         />
        </body>
     </html>
   );

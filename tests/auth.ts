@@ -4,7 +4,13 @@ import type { Page } from '@playwright/test';
 
 export type Role = 'admin' | 'tutor' | 'tutor2' | 'learner';
 
-const OUT_DIR = path.resolve(process.cwd(), '.auth');
+// Default to the shared cache so runs can reuse sessions. Set PW_AUTH_DIR to
+// isolate a run: two Playwright runs writing the same files interleave and
+// produce spurious "session no longer valid" failures.
+const OUT_DIR = path.resolve(
+  process.cwd(),
+  process.env.PW_AUTH_DIR || '.auth'
+);
 
 const LANDING: Record<Role, string> = {
   admin: '/admin',

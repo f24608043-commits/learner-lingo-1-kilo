@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import Link from "next/link";
 import { startDirectConversation } from "@/app/messaging/actions";
 import { requestEnrollmentAction } from "@/app/tutoring/actions";
+import TutorReviews from "./TutorReviews";
 
 interface TutorProfileClientProps {
   profile: {
@@ -52,6 +53,18 @@ interface TutorProfileClientProps {
     points: number;
     metrics: any;
   } | null;
+  reviews: {
+    id: string;
+    rating: number;
+    reviewText: string | null;
+    createdAt: Date;
+    studentId: string;
+    studentName: string | null;
+  }[];
+  reviewAverage: number;
+  reviewTotal: number;
+  canReview: boolean;
+  currentUserId: string;
 }
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -64,6 +77,11 @@ export default function TutorProfileClient({
   availability,
   awardedBadges,
   rank,
+  reviews,
+  reviewAverage,
+  reviewTotal,
+  canReview,
+  currentUserId,
 }: TutorProfileClientProps) {
   const [activeTab, setActiveTab] = useState<"about" | "schedule" | "reviews" | "badges">("about");
   const [isEnrolling, setIsEnrolling] = useState(false);
@@ -295,10 +313,14 @@ export default function TutorProfileClient({
 
             {activeTab === "reviews" && (
               <div className="space-y-4">
-                <h3 className="font-headline-sm text-text-primary font-bold mb-3">Reviews</h3>
-                <p className="font-body-md text-text-muted text-center py-8">
-                  Reviews will appear here after completed sessions.
-                </p>
+                <TutorReviews
+                  tutorId={profile.id}
+                  reviews={reviews}
+                  average={reviewAverage}
+                  total={reviewTotal}
+                  canReview={canReview}
+                  currentUserId={currentUserId}
+                />
               </div>
             )}
 

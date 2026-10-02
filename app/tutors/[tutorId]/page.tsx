@@ -4,6 +4,7 @@ import { profiles, tutorProfiles, tutorEnrollments, tutorAvailability, badges, l
 import { eq, and, desc, count, sql } from "drizzle-orm";
 import TutorProfileClient from "./TutorProfileClient";
 import { notFound } from "next/navigation";
+import { getTutorReviews } from "@/app/groups/actions";
 
 export default async function TutorProfilePage({ params }: { params: Promise<{ tutorId: string }> }) {
   const { tutorId } = await params;
@@ -94,6 +95,27 @@ export default async function TutorProfilePage({ params }: { params: Promise<{ t
     .where(eq(userRanks.userId, tutorId))
     .limit(1);
 
+  const reviewsData = await getTutorReviews(tutorId);
+
+  // Only a learner actually enrolled with this tutor may leave a review.
+  const { data: { user: viewer } } = await createClient().then((c) => c.auth.getUser());
+
+  let canReview = false;
+  if (viewer && viewer.id !== tutorId) {
+    const [viewerEnrollment] = await db
+      .select({ id: tutorEnrollments.id })
+      .from(tutorEnrollments)
+      .where(
+        and(
+          eq(tutorEnrollments.tutorId, tutorId),
+          eq(tutorEnrollments.learnerId, viewer.id),
+          eq(tutorEnrollments.status, "enrolled")
+        )
+      )
+      .limit(1);
+    canReview = Boolean(viewerEnrollment);
+  }
+
   return (
     <TutorProfileClient
       profile={safeProfile}
@@ -103,6 +125,11 @@ export default async function TutorProfilePage({ params }: { params: Promise<{ t
       availability={availability}
       awardedBadges={awardedBadges}
       rank={rank}
+      reviews={reviewsData.reviews}
+      reviewAverage={reviewsData.average}
+      reviewTotal={reviewsData.total}
+      canReview={canReview}
+      currentUserId={viewer?.id ?? ""}
     />
   );
 }

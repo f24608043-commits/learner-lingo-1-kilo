@@ -21,7 +21,12 @@ type StorageState = {
   origins: { origin: string; localStorage: { name: string; value: string }[] }[];
 };
 
-const OUT_DIR = path.resolve(process.cwd(), '.auth');
+// Keep in sync with tests/auth.ts. PW_AUTH_DIR isolates a run's cache so
+// concurrent Playwright runs do not overwrite each other's sessions.
+const OUT_DIR = path.resolve(
+  process.cwd(),
+  process.env.PW_AUTH_DIR || '.auth'
+);
 
 type Role = 'admin' | 'tutor' | 'learner' | 'tutor2';
 

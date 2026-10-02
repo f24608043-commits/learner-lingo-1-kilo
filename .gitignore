@@ -50,3 +50,5 @@ screenshots/
 
 # Playwright cached auth sessions
 .auth/
+.auth-iso/
+.auth*/
