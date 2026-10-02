@@ -106,7 +106,7 @@ export default async function FriendsPage({
                   const isAlreadyFriend = friends.some((f: any) => f.id === learner.id);
 
                   return (
-                    <div key={learner.id} className="p-3 rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-between gap-3">
+                    <div key={learner.id} data-testid="friend-search-result" className="p-3 rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-emerald-400 text-white font-extrabold flex items-center justify-center text-sm shrink-0">
                           {learner.displayName?.[0] || "?"}
@@ -128,6 +128,7 @@ export default async function FriendsPage({
                         }}>
                           <button
                             type="submit"
+                            data-testid="friend-add-button"
                             className="rounded-xl bg-primary text-white px-3 py-1.5 font-label-sm font-bold text-xs shadow-sm border-b-2 border-primary-dark hover:brightness-105 active:translate-y-[1px] transition-all cursor-pointer"
                           >
                             + Add
@@ -157,6 +158,7 @@ export default async function FriendsPage({
             {pendingRequests.map((request: any) => (
               <div
                 key={request.id}
+                data-testid="pending-request"
                 className="rounded-3xl bg-white p-4 shadow-clay-surface border-l-4 border-l-orange-500 border border-surface-border flex items-center justify-between gap-4"
               >
                 <div className="flex items-center gap-3 min-w-0">
@@ -228,6 +230,7 @@ export default async function FriendsPage({
               return (
                 <div
                   key={friend.id}
+                  data-testid="friend-card"
                   className="min-w-0 rounded-3xl bg-white p-5 shadow-clay-surface border border-surface-border hover:shadow-xl hover:border-pink-200 transition-all animate-pop-in"
                   style={{ animationDelay: `${idx * 60}ms` }}
                 >
@@ -260,10 +263,12 @@ export default async function FriendsPage({
                       <form action={async () => {
                         "use server";
                         const { startDirectConversation } = await import("@/app/messaging/actions");
-                        await startDirectConversation(friend.id);
+                        const { conversationId } = await startDirectConversation(friend.id);
+                        redirect(`/messages/${conversationId}`);
                       }}>
                         <button
                           type="submit"
+                          data-testid="friend-chat-button"
                           className="rounded-xl bg-pink-50 text-pink-700 border border-pink-200 px-3 py-1.5 font-label-sm font-bold text-xs hover:bg-pink-100 transition-all cursor-pointer flex items-center gap-1"
                         >
                           <span className="material-symbols-outlined text-[14px]">chat</span>
@@ -314,6 +319,7 @@ export default async function FriendsPage({
               return (
                 <div
                   key={learner.id}
+                  data-testid="friend-suggestion"
                   className="min-w-0 p-3 rounded-2xl bg-white border border-gray-200 flex items-center justify-between gap-3 animate-pop-in"
                   style={{ animationDelay: `${idx * 60}ms` }}
                 >
@@ -334,6 +340,7 @@ export default async function FriendsPage({
                   }} className="shrink-0">
                     <button
                       type="submit"
+                      data-testid="friend-suggestion-add"
                       className="rounded-xl bg-primary text-white px-3 py-1.5 font-label-sm font-bold text-xs shadow-sm border-b-2 border-primary-dark hover:brightness-105 active:translate-y-[1px] transition-all cursor-pointer"
                     >
                       + Add

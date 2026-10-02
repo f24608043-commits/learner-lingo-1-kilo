@@ -6,6 +6,7 @@ import { sendFriendRequest } from "@/app/friends/actions";
 import Mascot from "@/components/Mascot";
 import { getLevelInfo } from "@/lib/xp";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export default async function ProfilePage({ params }: { params: Promise<{ userId: string }> }) {
   const supabase = await createClient();
@@ -168,10 +169,12 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
                   <form action={async () => {
                     "use server";
                     const { startDirectConversation } = await import("@/app/messaging/actions");
-                    await startDirectConversation(targetUserId);
+                    const { conversationId } = await startDirectConversation(targetUserId);
+                    redirect(`/messages/${conversationId}`);
                   }}>
                     <button
                       type="submit"
+                      data-testid="profile-message-button"
                       className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-2xl font-label-md font-black shadow-md border-b-4 border-primary-dark hover:brightness-105 active:translate-y-[2px] transition-all cursor-pointer text-sm uppercase"
                     >
                       <span className="material-symbols-outlined text-[18px]">chat</span>

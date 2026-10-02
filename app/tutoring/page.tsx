@@ -226,7 +226,7 @@ export default async function TutoringPage() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {tutors.map((tutor: any) => (
-                            <div key={tutor.id} className="min-w-0 rounded-2xl bg-gradient-to-br from-white to-blue-50 p-5 shadow-xl border-4 border-blue-100 hover:shadow-2xl hover:border-blue-200 transition-all">
+                            <div key={tutor.id} data-testid="tutor-card" className="min-w-0 rounded-2xl bg-gradient-to-br from-white to-blue-50 p-5 shadow-xl border-4 border-blue-100 hover:shadow-2xl hover:border-blue-200 transition-all">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 text-white font-bold text-xl shadow-xl border-4 border-white/30">
                     {tutor.displayName?.[0] || "?"}
@@ -259,7 +259,7 @@ export default async function TutoringPage() {
                   <div className="flex flex-wrap gap-2">
                     <form action={startDirectConversationAction}>
                       <input type="hidden" name="otherUserId" value={tutor.tutorId} />
-                      <button className="rounded-xl border-2 border-blue-300 bg-gradient-to-br from-blue-50 to-cyan-50 text-blue-600 px-3 py-2 font-label-sm font-bold shadow-lg hover:from-blue-100 hover:to-cyan-100 transition-all">
+                      <button data-testid="tutor-message-button" className="rounded-xl border-2 border-blue-300 bg-gradient-to-br from-blue-50 to-cyan-50 text-blue-600 px-3 py-2 font-label-sm font-bold shadow-lg hover:from-blue-100 hover:to-cyan-100 transition-all">
                         Message
                       </button>
                     </form>

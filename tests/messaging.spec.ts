@@ -1,207 +1,112 @@
 import { test, expect } from '@playwright/test';
+import { loginAs, gotoRedirectSafe } from './auth';
 
 test.describe('Messaging System', () => {
-  // Test credentials from existing tests
-  const TUTOR_EMAIL = 'tutor@gmail.com';
-  const TUTOR_PASSWORD = 'tutor@1221';
-  const ADMIN_EMAIL = 'admin@gmail.com';
-  const ADMIN_PASSWORD = 'admin@1221';
+  test('tutor can open the messages page', async ({ page }) => {
+    await loginAs(page, 'tutor', '/messages');
 
-  test('tutor can message another user via profile', async ({ page, context }) => {
-    // Login as tutor
-    await page.goto('/sign-in');
-    await page.waitForLoadState('networkidle');
-    await page.fill('input[name="email"]', TUTOR_EMAIL);
-    await page.fill('input[name="password"]', TUTOR_PASSWORD);
-    await page.click('button[type="submit"]');
-    
-    // Wait for redirect to dashboard
-    await expect(page).toHaveURL(/\/tutoring\/dashboard|\/path/, { timeout: 15000 });
-    
-    // Navigate to messages page
-    await page.goto('/messages');
-    await page.waitForLoadState('networkidle');
-    
-    // Check that messages page loads
-    await expect(page.locator('h1').first()).toContainText('Messages', { timeout: 10000 });
-    
-    // Check for conversation list or empty state
-    const conversationList = page.locator('[data-testid="conversation-list"], .conversation-list, a[href^="/messages/"]');
-    const emptyState = page.locator('text=No conversations yet');
-    
- const hasConversations = await conversationList.count() > 0;
-  const hasEmptyState = await emptyState.count() > 0;
-  
-  expect(hasConversations || hasEmptyState).toBeTruthy();
+    await expect(page.getByRole('heading', { name: 'Messages' })).toBeVisible({ timeout: 30000 });
+
+    // Either a conversation or the empty state, but one of them must render.
+    const conversations = page.getByTestId('conversation-item');
+    const empty = page.getByText('No conversations yet');
+    await expect(conversations.or(empty).first()).toBeVisible({ timeout: 30000 });
   });
 
   test('messages navigation exists in shell', async ({ page }) => {
-    await page.goto('/sign-in');
-    await page.waitForLoadState('networkidle');
-    await page.fill('input[name="email"]', TUTOR_EMAIL);
-    await page.fill('input[name="password"]', TUTOR_PASSWORD);
-    await page.click('button[type="submit"]');
-    
-    await expect(page).toHaveURL(/\/tutoring\/dashboard|\/path/, { timeout: 15000 });
-    
-    // Check for Messages link in navigation
-    const messagesLink = page.locator('a[href="/messages"]').first();
-    await expect(messagesLink).toBeVisible({ timeout: 10000 });
+    await loginAs(page, 'tutor');
+
+    await expect(page.locator('a[href="/messages"]').first()).toBeVisible({ timeout: 30000 });
   });
 
   test('message button exists on tutor cards', async ({ page }) => {
-    test.skip(true, 'Tutoring page timing out - skipping for now');
+    await loginAs(page, 'learner', '/tutoring');
+
+    const card = page.getByTestId('tutor-card').first();
+    await expect(card).toBeVisible({ timeout: 60000 });
+    await expect(card.getByTestId('tutor-message-button')).toBeVisible();
   });
 
-  test('message button exists on friends list', async ({ page }) => {
-    test.skip(true, 'Auth fetch failing - skipping for now');
+  test('every friends card exposes a chat button', async ({ page }) => {
+    await loginAs(page, 'learner', '/friends');
+
+    await expect(page.getByRole('heading', { name: /Your Learning Squad/ })).toBeVisible({
+      timeout: 60000,
+    });
+
+    const cards = page.getByTestId('friend-card');
+    await expect
+      .poll(async () => cards.getByTestId('friend-chat-button').count(), { timeout: 60000 })
+      .toBe(await cards.count());
   });
 
   test('test-setup page loads with camera/mic/speaker test', async ({ page }) => {
-    await page.goto('/sign-in');
-    await page.waitForLoadState('networkidle');
-    await page.fill('input[name="email"]', TUTOR_EMAIL);
-    await page.fill('input[name="password"]', TUTOR_PASSWORD);
-    await page.click('button[type="submit"]');
-    
-    await expect(page).toHaveURL(/\/tutoring\/dashboard|\/path/, { timeout: 15000 });
-    
-    // Navigate to test-setup page
-    await page.goto('/tutoring/test-setup');
-    await page.waitForLoadState('networkidle');
-    
-    // Check for test elements
-    await expect(page.locator('h1').first()).toContainText('Live Class Setup Test', { timeout: 10000 });
-    
-    // Check for camera test section
+    await gotoRedirectSafe(page, '/tutoring/test-setup', 60000);
+
+    await expect(page.locator('h1').first()).toContainText('Live Class Setup Test', {
+      timeout: 30000,
+    });
     await expect(page.locator('h2:has-text("Camera")').first()).toBeVisible();
-    
-    // Check for microphone test section
     await expect(page.locator('h2:has-text("Microphone")').first()).toBeVisible();
-    
-    // Check for speaker test section
     await expect(page.locator('h2:has-text("Speaker")').first()).toBeVisible();
-    
-    // Check for start camera button
     await expect(page.locator('button:has-text("Start Camera")')).toBeVisible();
-    
-    // Check for start mic button
     await expect(page.locator('button:has-text("Start Mic")')).toBeVisible();
-    
-    // Check for test speaker button
     await expect(page.locator('button:has-text("Test Speaker")')).toBeVisible();
   });
 
   test('admin can access messages', async ({ page }) => {
-    await page.goto('/sign-in');
-    await page.waitForLoadState('networkidle');
-    await page.fill('input[name="email"]', ADMIN_EMAIL);
-    await page.fill('input[name="password"]', ADMIN_PASSWORD);
-    await page.click('button[type="submit"]');
-    
-    await expect(page).toHaveURL(/\/admin/, { timeout: 30000 });
-    
-    // Navigate to messages page
-    await page.goto('/messages', { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('networkidle');
-    
-    // Check that messages page loads
-    await expect(page.locator('h1').first()).toContainText('Messages', { timeout: 10000 });
+    await loginAs(page, 'admin', '/messages');
+
+    await expect(page.getByRole('heading', { name: 'Messages' })).toBeVisible({ timeout: 30000 });
   });
 
   test('unauthenticated user redirected from messages', async ({ page }) => {
-    test.skip(true, 'Middleware auth check not implemented - skipping');
+    await gotoRedirectSafe(page, '/messages', 60000);
+
+    expect(page.url()).toContain('/sign-in');
   });
 
   test('unauthenticated user redirected from message thread', async ({ page }) => {
-    test.skip(true, 'Middleware auth check not implemented - skipping');
+    await gotoRedirectSafe(
+      page,
+      '/messages/00000000-0000-0000-0000-000000000000',
+      60000
+    );
+
+    expect(page.url()).toContain('/sign-in');
   });
 
   test('course creation page loads', async ({ page }) => {
-    await page.goto('/sign-in');
-    await page.waitForLoadState('networkidle');
-    await page.fill('input[name="email"]', ADMIN_EMAIL);
-    await page.fill('input[name="password"]', ADMIN_PASSWORD);
-    await page.click('button[type="submit"]');
-    
-    await expect(page).toHaveURL(/\/admin/, { timeout: 15000 });
-    
-    // Navigate to course creation
-    await page.goto('/admin/courses/new');
-    await page.waitForLoadState('networkidle');
-    
-    // Check for course creation form
-    await expect(page.locator('input[name="title"]')).toBeVisible({ timeout: 10000 });
+    await loginAs(page, 'admin', '/admin/courses/new');
+
+    await expect(page.locator('input[name="title"]')).toBeVisible({ timeout: 60000 });
     await expect(page.locator('textarea[name="description"]')).toBeVisible();
   });
 
-  test('lesson completion flow works', async ({ page }) => {
-    test.skip(true, 'Library route timing out - skipping for now');
-  });
-
   test('friends page loads and functions', async ({ page }) => {
-    await page.goto('/sign-in');
-    await page.waitForLoadState('networkidle');
-    await page.fill('input[name="email"]', TUTOR_EMAIL);
-    await page.fill('input[name="password"]', TUTOR_PASSWORD);
-    await page.click('button[type="submit"]');
-    
-    await expect(page).toHaveURL(/\/tutoring\/dashboard|\/path/, { timeout: 15000 });
-    
-    // Navigate to friends page
-    await page.goto('/friends', { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('networkidle');
-    
-    // Check that friends page loads
-    await expect(page.locator('h1').first()).toContainText(/Your Learning Squad/, { timeout: 10000 });
+    await loginAs(page, 'tutor', '/friends');
+
+    await expect(page.locator('h1').first()).toContainText(/Your Learning Squad/, {
+      timeout: 30000,
+    });
+    await expect(page.getByRole('button', { name: 'Search' })).toBeVisible();
   });
 
   test('tutoring page loads with tutor list', async ({ page }) => {
-    await page.goto('/sign-in');
-    await page.waitForLoadState('networkidle');
-    await page.fill('input[name="email"]', TUTOR_EMAIL);
-    await page.fill('input[name="password"]', TUTOR_PASSWORD);
-    await page.click('button[type="submit"]');
-    
-    await expect(page).toHaveURL(/\/tutoring\/dashboard|\/path|\/sign-in/, { timeout: 30000 });
-    
-    // If we got redirected back to sign-in with an error, just skip checking tutoring page
-    const url = page.url();
-    if (url.includes('sign-in') && (url.includes('error') || !url.includes('tutoring'))) {
-      console.log('Tutor login failed or redirected back to sign-in, skipping tutoring page check');
-      return;
-    }
-    
-    // Navigate to tutoring page
-    await page.goto('/tutoring', { waitUntil: 'domcontentloaded', timeout: 30000 });
-    await page.waitForLoadState('networkidle');
-    
-    // Check that tutoring page loads - accept either Tutor Dashboard or Find a Tutor
-    const pageTitle = page.locator('h1').first();
-    await expect(pageTitle).toBeVisible({ timeout: 10000 });
-    // Accept either Tutor Dashboard (for tutors) or Find a Tutor section
-    const findTutorHeading = page.locator('h2:has-text("Find a Tutor"), h2:has-text("Tutors"), h2:has-text("Tutor Directory")').first();
-    await expect(findTutorHeading).toBeVisible({ timeout: 10000 });
+    await loginAs(page, 'tutor', '/tutoring');
+
+    await expect(
+      page
+        .locator('h2:has-text("Find a Tutor"), h2:has-text("Tutors"), h2:has-text("Tutor Directory")')
+        .first()
+    ).toBeVisible({ timeout: 60000 });
   });
 
   test('profile page loads', async ({ page }) => {
-    await page.goto('/sign-in');
-    await page.waitForLoadState('networkidle');
-    await page.fill('input[name="email"]', TUTOR_EMAIL);
-    await page.fill('input[name="password"]', TUTOR_PASSWORD);
-    await page.click('button[type="submit"]');
-    
-    await expect(page).toHaveURL(/\/tutoring\/dashboard|\/path/, { timeout: 15000 });
-    
-    // Navigate to profile (using a valid UUID format, will test navigation structure)
-    // Use a valid UUID format to avoid 500 errors from invalid UUID format
-    await page.goto('/profile/00000000-0000-0000-0000-000000000000', { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('networkidle');
-    
-    // Profile page should either load or show "User Not Found"
+    await gotoRedirectSafe(page, '/profile/00000000-0000-0000-0000-000000000000', 60000);
+
     const pageTitle = page.locator('h1').first();
-    await expect(pageTitle).toBeVisible({ timeout: 10000 });
-    // Accept either "User Not Found", a valid profile page, or error page
+    await expect(pageTitle).toBeVisible({ timeout: 30000 });
     await expect(pageTitle).toContainText(/User Not Found|Learner|Tutor|Admin|This page couldn't/);
   });
 });

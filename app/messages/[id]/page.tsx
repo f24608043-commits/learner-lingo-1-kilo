@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, use } from "react";
 import { getMessages, sendMessage, markRead, leaveGroup } from "../../messaging/actions";
 import { createClient } from "@/utils/supabase/client";
 import { RealtimeChannel } from "@supabase/supabase-js";
@@ -20,7 +20,11 @@ interface Message {
   };
 }
 
-export default function MessageThreadPage({ params }: { params: { id: string } }) {
+export default function MessageThreadPage({ params }: { params: Promise<{ id: string }> }) {
+  // In Next 16 `params` arrives as a Promise even in a client component, so it
+  // has to be unwrapped. Reading `params.id` directly yields undefined, which
+  // silently broke loading, markRead and every send.
+  const { id: conversationId } = use(params);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -55,25 +59,25 @@ export default function MessageThreadPage({ params }: { params: { id: string } }
         setCurrentUser(user);
 
         // Load messages
-        const initialMessages = await getMessages(params.id);
+        const initialMessages = await getMessages(conversationId);
         if (mounted) {
           setMessages(initialMessages);
           setIsLoading(false);
         }
 
         // Mark as read
-        await markRead(params.id);
+        await markRead(conversationId);
 
         // Setup Realtime subscription
         const channel = supabase
-          .channel(`messages:${params.id}`)
+          .channel(`messages:${conversationId}`)
           .on(
             "postgres_changes",
             {
               event: "INSERT",
               schema: "public",
               table: "messages",
-              filter: `conversation_id=eq.${params.id}`,
+              filter: `conversation_id=eq.${conversationId}`,
             },
             async (payload) => {
               const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -104,7 +108,7 @@ export default function MessageThreadPage({ params }: { params: { id: string } }
 
               setMessages((prev) => [...prev, newMessage]);
 
-              await markRead(params.id);
+              await markRead(conversationId);
             }
           )
           .subscribe();
@@ -125,7 +129,7 @@ export default function MessageThreadPage({ params }: { params: { id: string } }
         supabase.removeChannel(channelRef.current);
       }
     };
-  }, [params.id]);
+  }, [conversationId]);
 
   const handleSend = async () => {
     if (!newMessage.trim() || isSending) return;
@@ -150,9 +154,28 @@ export default function MessageThreadPage({ params }: { params: { id: string } }
     setMessages((prev) => [...prev, optimisticMessage]);
 
     try {
-      await sendMessage(params.id, tempMessage);
-      // Remove optimistic message and let Realtime handle the real one
-      setMessages((prev) => prev.filter((m) => m.message.id !== "temp"));
+      const result = await sendMessage(conversationId, tempMessage);
+      // Swap the optimistic bubble for the stored one. Dropping it instead
+      // would leave the thread empty, because the Realtime handler below
+      // deliberately ignores messages sent by the current user.
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.message.id === "temp"
+            ? {
+                message: {
+                  id: result.message.id,
+                  body: result.message.body,
+                  createdAt: new Date(result.message.createdAt),
+                },
+                sender: {
+                  id: currentUser?.id || "",
+                  displayName: currentUser?.user_metadata?.display_name || null,
+                  avatarUrl: currentUser?.user_metadata?.avatar_url || null,
+                },
+              }
+            : m
+        )
+      );
     } catch (error: any) {
       console.error("Error sending message:", error);
       // Revert optimistic update on error
@@ -168,7 +191,7 @@ export default function MessageThreadPage({ params }: { params: { id: string } }
     if (!confirm("Are you sure you want to leave this conversation?")) return;
 
     try {
-      await leaveGroup(params.id);
+      await leaveGroup(conversationId);
       redirect("/messages");
     } catch (error: any) {
       console.error("Error leaving group:", error);
@@ -235,6 +258,7 @@ export default function MessageThreadPage({ params }: { params: { id: string } }
             {messages.map((msg) => (
               <div
                 key={msg.message.id}
+                data-testid="message-bubble"
                 className={`flex ${msg.sender.id === currentUser?.id ? "justify-end" : "justify-start"}`}
               >
                 <div className={`max-w-[70%] rounded-2xl px-4 py-3 ${
@@ -260,10 +284,13 @@ export default function MessageThreadPage({ params }: { params: { id: string } }
       </div>
 
       {/* Input */}
-      <div className="bg-white border-t border-gray-200 px-6 py-4 shrink-0">
+      {/* The mascot chat widget is fixed at bottom-4 right-4 on md+, which would
+          otherwise sit on top of the send button and swallow every click. */}
+      <div className="bg-white border-t border-gray-200 px-6 pt-4 pb-4 md:pb-28 shrink-0">
         <div className="max-w-3xl mx-auto flex gap-3">
           <input
             type="text"
+            data-testid="message-input"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSend()}
@@ -274,6 +301,7 @@ export default function MessageThreadPage({ params }: { params: { id: string } }
           />
           <button
             onClick={handleSend}
+            data-testid="message-send"
             disabled={!newMessage.trim() || isSending}
             className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >

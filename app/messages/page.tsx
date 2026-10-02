@@ -56,6 +56,7 @@ export default async function MessagesPage() {
           {conversations.map((item: any) => (
             <Link
               key={item.conversation.id}
+              data-testid="conversation-item"
               href={`/messages/${item.conversation.id}`}
               className="block"
             >

@@ -450,7 +450,7 @@ export async function sendMessage(conversationId: string, body: string) {
     .where(
       and(
         eq(blocks.blockerId, user.id),
-        sql`${blocks.blockedId} IN (SELECT user_id FROM conversation_participants WHERE conversation_id = ${conversationId})`
+        sql`${blocks.blockedId} IN (SELECT user_id FROM conversation_members WHERE conversation_id = ${conversationId})`
       )
     )
     .limit(1);

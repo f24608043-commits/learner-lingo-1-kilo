@@ -18,6 +18,7 @@ import {
 import { eq, and, or, desc, inArray, gte, lte, sql } from "drizzle-orm";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createNotification } from "@/app/notifications/actions";
 
 // Tutor Profile Actions
@@ -564,9 +565,10 @@ export async function requestSessionAction(formData: FormData) {
 
 export async function startDirectConversationAction(formData: FormData) {
   const otherUserId = formData.get("otherUserId") as string;
-  
+
   const { startDirectConversation } = await import("../messaging/actions");
-  await startDirectConversation(otherUserId);
+  const { conversationId } = await startDirectConversation(otherUserId);
+  redirect(`/messages/${conversationId}`);
 }
 
 // Recurring Session Actions

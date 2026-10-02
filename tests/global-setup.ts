@@ -73,7 +73,7 @@ const WARMUP: Record<Role, string[]> = {
     '/tutoring',
     '/profile',
   ],
-  tutor2: ['/tutoring/dashboard', '/tutoring'],
+  tutor2: ['/tutoring/dashboard', '/tutoring', '/friends', '/messages'],
 };
 
 const ACCOUNTS: Record<Role, { email: string; password: string }> = {

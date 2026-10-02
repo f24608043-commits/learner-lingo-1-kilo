@@ -76,6 +76,7 @@ export default function UnifiedShell({
       sidebar: [
         { path: "/path", label: "Path", icon: "home" },
         { path: "/library", label: "Library", icon: "menu_book" },
+        { path: "/groups", label: "Groups", icon: "groups_2" },
         { path: "/tutoring", label: "Class", icon: "groups" },
         { path: "/friends", label: "Friends", icon: "diversity_3" },
         { path: "/messages", label: "Messages", icon: "chat" },
@@ -89,6 +90,7 @@ export default function UnifiedShell({
         { path: "/profile", label: "Profile", icon: "person" },
       ],
       more: [
+        { path: "/groups", label: "Groups", icon: "groups_2" },
         { path: "/notifications", label: "Notifications", icon: "notifications" },
         { path: "/settings", label: "Settings", icon: "settings" },
       ],
@@ -97,6 +99,7 @@ export default function UnifiedShell({
       sidebar: [
         { path: "/tutoring/dashboard", label: "Dashboard", icon: "dashboard" },
         { path: "/tutoring/history", label: "History", icon: "history" },
+        { path: "/groups", label: "Groups", icon: "groups_2" },
         { path: "/tutoring", label: "My Classes", icon: "groups" },
         { path: "/messages", label: "Messages", icon: "chat" },
       ],
@@ -108,6 +111,7 @@ export default function UnifiedShell({
         { path: "/profile", label: "Profile", icon: "person" },
       ],
       more: [
+        { path: "/groups", label: "Groups", icon: "groups_2" },
         { path: "/notifications", label: "Notifications", icon: "notifications" },
         { path: "/settings", label: "Settings", icon: "settings" },
       ],
@@ -119,6 +123,7 @@ export default function UnifiedShell({
         { path: "/admin/courses", label: "Courses", icon: "school" },
         { path: "/admin/badges", label: "Badges", icon: "military_tech" },
         { path: "/admin/tutoring", label: "Tutoring", icon: "groups" },
+        { path: "/groups", label: "Groups", icon: "groups_2" },
         { path: "/messages", label: "Messages", icon: "chat" },
       ],
       bottom: [
@@ -129,6 +134,7 @@ export default function UnifiedShell({
         { path: "/admin/tutoring", label: "Tutoring", icon: "groups" },
       ],
       more: [
+        { path: "/groups", label: "Groups", icon: "groups_2" },
         { path: "/admin/tutoring", label: "Tutoring", icon: "groups" },
         { path: "/settings", label: "Settings", icon: "settings" },
       ],

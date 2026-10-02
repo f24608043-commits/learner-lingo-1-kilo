@@ -341,6 +341,13 @@ export default async function DashboardPage() {
             </div>
             <p className="font-body-sm opacity-90">Find expert tutors</p>
           </a>
+          <a href="/groups" className="rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white p-6 shadow-clay-tertiary border-4 border-white/30 hover:shadow-xl hover:border-white/50 transition-all group">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="material-symbols-outlined text-[28px] group-hover:animate-bounce">groups_2</span>
+              <h3 className="font-label-lg font-extrabold">Groups</h3>
+            </div>
+            <p className="font-body-sm opacity-90">Classwork with your classmates</p>
+          </a>
           <a href="/friends" className="rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 text-white p-6 shadow-clay-secondary border-4 border-white/30 hover:shadow-xl hover:border-white/50 transition-all group">
             <div className="flex items-center gap-3 mb-2">
               <span className="material-symbols-outlined text-[28px] group-hover:animate-bounce">diversity_3</span>
