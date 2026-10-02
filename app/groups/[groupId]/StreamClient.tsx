@@ -56,8 +56,11 @@ export default function StreamClient({
   currentUserName: string;
 }) {
   const router = useRouter();
-  const [announcements, setAnnouncements] = useState(initialAnnouncements);
-  const [comments, setComments] = useState(initialComments);
+  // Announcements and comments are server data: read them straight from props.
+  // Copying them into useState would freeze the first render, so a
+  // router.refresh() after posting would never show the new item.
+  const announcements = initialAnnouncements;
+  const comments = initialComments;
   const [chat, setChat] = useState<ChatMessage[]>([]);
   const [chatDraft, setChatDraft] = useState("");
   const [commentDraft, setCommentDraft] = useState("");

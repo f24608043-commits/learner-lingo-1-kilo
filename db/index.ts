@@ -21,7 +21,10 @@ function getClient(): postgres.Sql {
       // cold pool then has to reconnect on the next query. Keeping connections
       // warm for far longer avoids most of those connect-time ETIMEDOUTs.
       idle_timeout: 600,
-      connect_timeout: 30, // 30 second connection attempt timeout
+      // Kept short on purpose. withDbRetry makes three attempts, so a long
+      // connect timeout would let one unlucky action stretch to 90s and look
+      // like a hung request to the UI. Normal connects take well under a second.
+      connect_timeout: 10,
       max_lifetime: 60 * 30, // Recycle connections every 30 minutes
     });
   }

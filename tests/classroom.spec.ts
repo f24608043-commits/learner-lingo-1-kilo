@@ -316,9 +316,12 @@ test.describe('Quiz builder', () => {
     await expect(page.getByTestId('quiz-taker')).toBeVisible({ timeout: 45000 });
 
     const preview = page.getByTestId('quiz-taker');
+    // The learner sees both question texts...
     await expect(preview).toContainText('What is 7 x 6?');
+    await expect(preview).toContainText('Explain why 2 + 2 = 4.');
+    // ...but nothing that reveals which option is correct, and no model answer.
     await expect(preview).not.toContainText('(correct)');
-    await expect(preview).not.toContainText('Explain why 2 + 2 = 4.');
+    await expect(preview).not.toContainText('42 (correct)');
   });
 
   test('learner submits the quiz and objective answers auto-grade', async ({ page }) => {
