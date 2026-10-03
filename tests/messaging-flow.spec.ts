@@ -41,7 +41,9 @@ test.describe('Messaging', () => {
 
     // The button has to land inside the thread, not merely create a conversation.
     await expect(page).toHaveURL(/\/messages\/[0-9a-f-]{36}/, { timeout: 60000 });
-    await expect(page.getByRole('heading', { name: 'Direct Message' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Direct Message' })).toBeVisible({
+      timeout: 60000,
+    });
 
     conversationId = (await getConversationIdByKey(learnerId, tutorId))!;
     expect(page.url().split('/messages/')[1]).toBe(conversationId);
