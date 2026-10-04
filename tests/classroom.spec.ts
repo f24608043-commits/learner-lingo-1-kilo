@@ -286,7 +286,11 @@ test.describe('Group stream', () => {
   test('group chat accepts a message', async ({ page }) => {
     await loginAs(page, 'learner', `/groups/${groupId}`);
 
-    await page.getByTestId('chat-input').fill('Hello group');
+    const input = page.getByTestId('chat-input');
+    await input.fill('Hello group');
+    // The field is controlled, so the value only sticks once React has
+    // hydrated and captured the change; clicking earlier submits natively.
+    await expect(input).toHaveValue('Hello group', { timeout: 30000 });
     await page.getByTestId('chat-send').click();
 
     await expect(page.getByTestId('chat-messages')).toContainText('Hello group', { timeout: 45000 });
