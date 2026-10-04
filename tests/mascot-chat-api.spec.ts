@@ -10,7 +10,7 @@ test.describe('Mascot Chat API Tests', () => {
     const cookies = await page.context().cookies();
     const cookieHeader = cookies.map(c => `${c.name}=${c.value}`).join('; ');
 
-    const response = await request.post('http://localhost:3000/api/mascot-chat', {
+    const response = await request.post('/api/mascot-chat', {
       headers: {
         'Cookie': cookieHeader,
       },
@@ -41,7 +41,7 @@ test.describe('Mascot Chat API Tests', () => {
     const cookies = await page.context().cookies();
     const cookieHeader = cookies.map(c => `${c.name}=${c.value}`).join('; ');
 
-    const response = await request.post('http://localhost:3000/api/mascot-chat', {
+    const response = await request.post('api/mascot-chat', {
       headers: {
         'Cookie': cookieHeader,
       },
@@ -76,7 +76,7 @@ test.describe('Mascot Chat API Tests', () => {
     // This test would need to send 21 messages within an hour to test the rate limit
     // For now, we'll just verify the API endpoint responds correctly
     
-    const response = await request.post('http://localhost:3000/api/mascot-chat', {
+    const response = await request.post('api/mascot-chat', {
       headers: {
         'Cookie': cookieHeader,
       },
