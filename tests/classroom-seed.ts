@@ -2,6 +2,16 @@ import path from 'path';
 import dotenv from 'dotenv';
 import postgres from 'postgres';
 import { db, withDbRetry } from '../db';
+
+/**
+ * Setup runs before any test, so it can afford far more attempts than an
+ * interactive request. A transient pooler drop here aborts the whole spec.
+ */
+const SEED_DB_ATTEMPTS = 10;
+
+function seedDbRetry<T>(operation: () => Promise<T>): Promise<T> {
+  return withDbRetry(operation, SEED_DB_ATTEMPTS);
+}
 import { eq } from 'drizzle-orm';
 import { groups, groupMembers, tutorReviews, profiles } from '../db/schema';
 
@@ -91,7 +101,7 @@ export async function cleanupClassroomData() {
     // Deleting the group cascades to members, assignments, submissions,
     // announcements, comments and enrollment requests. Re-running a delete is
     // harmless, so it is retryable too.
-    await withDbRetry(() => db.delete(groups).where(eq(groups.id, id)));
+    await seedDbRetry(() => db.delete(groups).where(eq(groups.id, id)));
   }
 
   // Reviews hang off profiles, so they need clearing by marker.

@@ -16,10 +16,10 @@ test.describe('Design Verification - Claymorphism + Mobile Nav', () => {
         // Sign in as learner for learner pages, admin for admin pages
         if (pagePath === '/admin') {
           await loginAs(page, 'admin');
-          await page.waitForLoadState('networkidle', { timeout: 30000 });
+          await page.waitForLoadState('load');
         } else {
           await loginAs(page, 'learner');
-          await page.waitForLoadState('networkidle', { timeout: 30000 });
+          await page.waitForLoadState('load');
           
           // Handle onboarding redirect
           const url = page.url();
@@ -29,7 +29,7 @@ test.describe('Design Verification - Claymorphism + Mobile Nav', () => {
         }
         
         await page.goto(pagePath);
-        await page.waitForLoadState('networkidle', { timeout: 15000 });
+        await page.waitForLoadState('load');
         
         // Take screenshot
         await page.screenshot({
