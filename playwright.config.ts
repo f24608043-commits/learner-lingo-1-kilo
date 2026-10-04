@@ -6,6 +6,10 @@ import path from 'path';
 const envPath = path.resolve(process.cwd(), '.env.local');
 dotenv.config({ path: envPath });
 
+// Port 3000 is sometimes occupied by another project's server, so the dev
+// port and the Playwright endpoints both honour PW_PORT (default 3000).
+const PORT = process.env.PW_PORT || '3000';
+
 export default defineConfig({
   testDir: './tests',
   globalSetup: './tests/global-setup.ts',
@@ -17,7 +21,7 @@ export default defineConfig({
     ? [['list'], ['json', { outputFile: '.pw-report.json' }]]
     : [['list']],
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: `http://localhost:${PORT}`,
     trace: 'on-first-retry',
   },
 
@@ -29,8 +33,8 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
+    command: `npm run dev -- -p ${PORT}`,
+    url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
     stdout: 'pipe',

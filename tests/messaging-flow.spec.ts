@@ -142,12 +142,11 @@ test.describe('Messaging', () => {
     const result = page.getByTestId('friend-search-result').filter({ hasText: 'LEGO Learner' });
     await expect(result).toBeVisible({ timeout: 60000 });
 
-    // These buttons submit a server action as a real form post, so the click
-    // navigates. Waiting for the load keeps the next goto from cancelling it.
-    await Promise.all([
-      page.waitForLoadState('load'),
-      result.getByTestId('friend-add-button').click(),
-    ]);
+    // The button submits a server action. Navigating away before that POST
+    // returns cancels the request, so wait for the response first.
+    const requestPromise = page.waitForResponse((r) => r.request().method() === 'POST');
+    await result.getByTestId('friend-add-button').click();
+    await requestPromise;
 
     // The requester no longer sees them as addable.
     await gotoRedirectSafe(page, '/friends?query=LEGO%20Learner', 60000);
@@ -170,10 +169,9 @@ test.describe('Messaging', () => {
 
     const pending = page.getByTestId('pending-request').filter({ hasText: 'Second Tutor' });
     await expect(pending).toBeVisible({ timeout: 60000 });
-    await Promise.all([
-      page.waitForLoadState('load'),
-      pending.getByRole('button', { name: 'Accept' }).click(),
-    ]);
+    const approvePromise = page.waitForResponse((r) => r.request().method() === 'POST');
+    await pending.getByRole('button', { name: 'Accept' }).click();
+    await approvePromise;
 
     const card = page.getByTestId('friend-card').filter({ hasText: 'Second Tutor' });
     await expect(card).toBeVisible({ timeout: 60000 });

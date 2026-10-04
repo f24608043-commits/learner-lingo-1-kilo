@@ -1,6 +1,6 @@
 "use server";
 
-import { db } from "@/db";
+import { db, withDbRetry } from "@/db";
 import { 
   conversations, 
   conversationMembers, 
@@ -484,23 +484,25 @@ export async function sendMessage(conversationId: string, body: string) {
 export async function getConversationForMember(conversationId: string) {
   const user = await getCurrentUser();
 
-  const [row] = await db
-    .select({
-      id: conversations.id,
-      type: conversations.type,
-      title: conversations.title,
-      jitsiRoomId: conversations.jitsiRoomId,
-    })
-    .from(conversations)
-    .innerJoin(
-      conversationMembers,
-      and(
-        eq(conversationMembers.conversationId, conversations.id),
-        eq(conversationMembers.userId, user.id)
+  const [row] = await withDbRetry(() =>
+    db
+      .select({
+        id: conversations.id,
+        type: conversations.type,
+        title: conversations.title,
+        jitsiRoomId: conversations.jitsiRoomId,
+      })
+      .from(conversations)
+      .innerJoin(
+        conversationMembers,
+        and(
+          eq(conversationMembers.conversationId, conversations.id),
+          eq(conversationMembers.userId, user.id)
+        )
       )
-    )
-    .where(eq(conversations.id, conversationId))
-    .limit(1);
+      .where(eq(conversations.id, conversationId))
+      .limit(1)
+  );
 
   if (!row) {
     throw new Error("You are not a member of this conversation");
@@ -514,16 +516,18 @@ export async function getMessages(conversationId: string, cursor?: string, limit
   const user = await getCurrentUser();
   
   // Check if user is a member
-  const [member] = await db
-    .select()
-    .from(conversationMembers)
-    .where(
-      and(
-        eq(conversationMembers.conversationId, conversationId),
-        eq(conversationMembers.userId, user.id)
+  const [member] = await withDbRetry(() =>
+    db
+      .select()
+      .from(conversationMembers)
+      .where(
+        and(
+          eq(conversationMembers.conversationId, conversationId),
+          eq(conversationMembers.userId, user.id)
+        )
       )
-    )
-    .limit(1);
+      .limit(1)
+  );
 
   if (!member) {
     throw new Error("You are not a member of this conversation");
@@ -536,20 +540,22 @@ export async function getMessages(conversationId: string, cursor?: string, limit
     whereConditions.push(lt(messages.createdAt, new Date(cursor)));
   }
 
-  const conversationMessages = await db
-    .select({
-      message: messages,
-      sender: {
-        id: profiles.id,
-        displayName: profiles.displayName,
-        avatarUrl: profiles.avatarUrl,
-      },
-    })
-    .from(messages)
-    .innerJoin(profiles, eq(messages.senderId, profiles.id))
-    .where(and(...whereConditions))
-    .orderBy(desc(messages.createdAt))
-    .limit(limit);
+  const conversationMessages = await withDbRetry(() =>
+    db
+      .select({
+        message: messages,
+        sender: {
+          id: profiles.id,
+          displayName: profiles.displayName,
+          avatarUrl: profiles.avatarUrl,
+        },
+      })
+      .from(messages)
+      .innerJoin(profiles, eq(messages.senderId, profiles.id))
+      .where(and(...whereConditions))
+      .orderBy(desc(messages.createdAt))
+      .limit(limit)
+  );
 
   return conversationMessages.reverse(); // Return in chronological order
 }
@@ -558,15 +564,18 @@ export async function getMessages(conversationId: string, cursor?: string, limit
 export async function markRead(conversationId: string) {
   const user = await getCurrentUser();
   
-  await db
-    .update(conversationMembers)
-    .set({ lastReadAt: new Date() })
-    .where(
-      and(
-        eq(conversationMembers.conversationId, conversationId),
-        eq(conversationMembers.userId, user.id)
+  // Setting lastReadAt to now is idempotent, so a retry is harmless.
+  await withDbRetry(() =>
+    db
+      .update(conversationMembers)
+      .set({ lastReadAt: new Date() })
+      .where(
+        and(
+          eq(conversationMembers.conversationId, conversationId),
+          eq(conversationMembers.userId, user.id)
+        )
       )
-    );
+  );
 
   return { success: true };
 }
@@ -575,20 +584,22 @@ export async function markRead(conversationId: string) {
 export async function getUnreadCount() {
   const user = await getCurrentUser();
   
-  const [result] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(conversationMembers)
-    .innerJoin(messages, eq(messages.conversationId, conversationMembers.conversationId))
-    .where(
-      and(
-        eq(conversationMembers.userId, user.id),
-        or(
-          isNull(conversationMembers.lastReadAt),
-          lt(conversationMembers.lastReadAt, messages.createdAt)
-        ),
-        sql`${messages.senderId} != ${user.id}`
+  const [result] = await withDbRetry(() =>
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(conversationMembers)
+      .innerJoin(messages, eq(messages.conversationId, conversationMembers.conversationId))
+      .where(
+        and(
+          eq(conversationMembers.userId, user.id),
+          or(
+            isNull(conversationMembers.lastReadAt),
+            lt(conversationMembers.lastReadAt, messages.createdAt)
+          ),
+          sql`${messages.senderId} != ${user.id}`
+        )
       )
-    );
+  );
 
   return result?.count || 0;
 }
@@ -691,23 +702,25 @@ export async function reportMessage(messageId: string, reason: string) {
 export async function getConversations(limit = 50) {
   const user = await getCurrentUser();
   
-  const userConversations = await db
-    .select({
-      conversation: conversations,
-      lastMessage: messages,
-      lastReadAt: conversationMembers.lastReadAt,
-    })
-    .from(conversationMembers)
-    .innerJoin(conversations, eq(conversationMembers.conversationId, conversations.id))
-    .leftJoin(messages, eq(messages.id, sql`(
-      SELECT id FROM messages
-      WHERE conversation_id = conversations.id
-      ORDER BY created_at DESC
-      LIMIT 1
-    )`))
-    .where(eq(conversationMembers.userId, user.id))
-    .orderBy(desc(conversations.lastMessageAt))
-    .limit(limit);
+  const userConversations = await withDbRetry(() =>
+    db
+      .select({
+        conversation: conversations,
+        lastMessage: messages,
+        lastReadAt: conversationMembers.lastReadAt,
+      })
+      .from(conversationMembers)
+      .innerJoin(conversations, eq(conversationMembers.conversationId, conversations.id))
+      .leftJoin(messages, eq(messages.id, sql`(
+        SELECT id FROM messages
+        WHERE conversation_id = conversations.id
+        ORDER BY created_at DESC
+        LIMIT 1
+      )`))
+      .where(eq(conversationMembers.userId, user.id))
+      .orderBy(desc(conversations.lastMessageAt))
+      .limit(limit)
+  );
 
   // Calculate unread count for each conversation
   const conversationsWithUnread = await Promise.all(
@@ -723,10 +736,12 @@ export async function getConversations(limit = 50) {
         whereConditions.push(sql`${messages.createdAt} > ${item.lastReadAt}`);
       }
 
-      const [unreadResult] = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(messages)
-        .where(and(...whereConditions));
+      const [unreadResult] = await withDbRetry(() =>
+        db
+          .select({ count: sql<number>`count(*)` })
+          .from(messages)
+          .where(and(...whereConditions))
+      );
 
       return {
         ...item,
