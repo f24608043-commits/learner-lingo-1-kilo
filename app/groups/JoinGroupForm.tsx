@@ -20,11 +20,18 @@ export default function JoinGroupForm() {
 
     startTransition(async () => {
       try {
-        const request = await requestGroupEnrollment({ groupCode: trimmed });
+        const result = await requestGroupEnrollment({ groupCode: trimmed });
+
+        // Only a real request clears the field, so a rejected code stays put
+        // and can be corrected instead of retyped.
+        if (!result.ok) {
+          toast.error(result.error);
+          return;
+        }
+
         toast.success("Request sent to the tutor");
         setCode("");
         router.refresh();
-        void request;
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Could not send request");
       }

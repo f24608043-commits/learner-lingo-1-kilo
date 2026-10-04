@@ -55,13 +55,19 @@ test.describe('Groups hub', () => {
   test('unknown group code does not create a request', async ({ page }) => {
     await loginAs(page, 'learner', '/groups');
 
-    await page.getByTestId('group-code-input').fill('NOPE00');
+    const input = page.getByTestId('group-code-input');
+    await input.fill('NOPE00');
+
+    // The field is controlled, so the value only sticks once React has
+    // hydrated and captured the change. Clicking earlier submits the form
+    // natively, which reloads the page and empties the field regardless.
+    await expect(input).toHaveValue('NOPE00', { timeout: 30000 });
+
     await page.getByTestId('join-group-submit').click();
 
     // The input is only cleared on success, so it still holding the code
     // proves the request failed, and no pending section may appear.
-    await page.waitForTimeout(6000);
-    await expect(page.getByTestId('group-code-input')).toHaveValue('NOPE00');
+    await expect(input).toHaveValue('NOPE00', { timeout: 30000 });
     await expect(page.getByTestId('my-requests')).toHaveCount(0);
   });
 });

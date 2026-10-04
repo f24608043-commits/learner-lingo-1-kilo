@@ -12,7 +12,9 @@ test.describe('Mascot Chat Feature', () => {
       await page.goto('/path');
     }
     
-    await page.waitForLoadState('networkidle', { timeout: 30000 });
+    // 'networkidle' never settles here: the shell polls /api/tutoring/reminders,
+// so waiting for it times out and takes every test in this file with it.
+await page.waitForLoadState('load');
   });
 
   test('chat widget opens and closes', async ({ page }) => {

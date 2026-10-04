@@ -803,10 +803,19 @@ export async function getComments(data: {
 
 // ── Enrollment requests ──────────────────────────────────────
 
+export type EnrollmentRequestResult =
+  | { ok: true; requestId: string }
+  | { ok: false; error: string };
+
+/**
+ * Expected mistakes are returned rather than thrown. A thrown server action
+ * answers with a 500, so submitting this form before hydration drops the
+ * visitor on an error page instead of showing them the message.
+ */
 export async function requestGroupEnrollment(data: {
   groupId?: string;
   groupCode?: string;
-}) {
+}): Promise<EnrollmentRequestResult> {
   const user = await requireUser();
 
   let groupId = data.groupId;
@@ -814,7 +823,7 @@ export async function requestGroupEnrollment(data: {
   if (!groupId) {
     const code = data.groupCode?.trim().toUpperCase();
     if (!code) {
-      throw new Error("Provide a group code or id");
+      return { ok: false, error: "Provide a group code or id" };
     }
 
     const [group] = await db
@@ -824,7 +833,7 @@ export async function requestGroupEnrollment(data: {
       .limit(1);
 
     if (!group) {
-      throw new Error("No group matches that code");
+      return { ok: false, error: "No group matches that code" };
     }
 
     groupId = group.id;
@@ -839,17 +848,17 @@ export async function requestGroupEnrollment(data: {
     .limit(1);
 
   if (!group) {
-    throw new Error("Group not found");
+    return { ok: false, error: "Group not found" };
   }
 
   // The tutor already has access; nothing to request.
   if (group.tutorId === user.id) {
-    throw new Error("You already own this group");
+    return { ok: false, error: "You already own this group" };
   }
 
   // An archived or invite-only group should not accept open requests.
   if (group.privacy === "archived") {
-    throw new Error("This group is archived");
+    return { ok: false, error: "This group is archived" };
   }
 
   const [alreadyMember] = await db
@@ -859,7 +868,7 @@ export async function requestGroupEnrollment(data: {
     .limit(1);
 
   if (alreadyMember) {
-    throw new Error("You are already in this group");
+    return { ok: false, error: "You are already in this group" };
   }
 
   const existing = await db
@@ -874,11 +883,13 @@ export async function requestGroupEnrollment(data: {
     .limit(1);
 
   if (existing.length) {
-    throw new Error(
-      existing[0].status === "pending"
-        ? "Your request is already pending"
-        : "You have already requested to join"
-    );
+    return {
+      ok: false,
+      error:
+        existing[0].status === "pending"
+          ? "Your request is already pending"
+          : "You have already requested to join",
+    };
   }
 
   const [created] = await db.insert(enrollmentRequests).values({
@@ -896,7 +907,7 @@ export async function requestGroupEnrollment(data: {
 
   revalidatePath("/groups");
   revalidatePath(`/groups/${groupId}`);
-  return created;
+  return { ok: true, requestId: created.id };
 }
 
 export async function respondToEnrollmentRequest(

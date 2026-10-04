@@ -35,7 +35,20 @@ test.describe('Live Tutor Profile Creation - Database Verification', () => {
     await expect(createProfileButton).toBeVisible({ timeout: 15000 });
 
     await createProfileButton.click();
-    await page.waitForTimeout(3000);
+
+    // The action writes the row server-side, so poll the authenticated API
+    // rather than sleeping a fixed 3s and calling a slow pooler a failure.
+    await expect
+      .poll(
+        async () => {
+          const probe = await page.request.get(`/api/test/tutor-profile?tutorId=${TUTOR_ID}`);
+          if (!probe.ok()) return false;
+          const body = await probe.json();
+          return body.success === true;
+        },
+        { timeout: 60000 }
+      )
+      .toBe(true);
 
     // Verify the row via the authenticated API (shares the page session cookie)
     const response = await page.request.get(`/api/test/tutor-profile?tutorId=${TUTOR_ID}`);

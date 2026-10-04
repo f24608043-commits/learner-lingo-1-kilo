@@ -18,6 +18,17 @@ export function directKey(a: string, b: string): string {
   return [a, b].sort().join('-');
 }
 
+/**
+ * Setup runs before any test and is not user-facing, so it can afford far more
+ * attempts than an interactive request. A transient pooler drop in here aborts
+ * the whole spec from beforeAll, which costs every test in the file.
+ */
+const SEED_ATTEMPTS = 10;
+
+function seedRetry<T>(operation: () => Promise<T>): Promise<T> {
+  return withDbRetry(operation, SEED_ATTEMPTS);
+}
+
 let pairKeys: string[] = [];
 
 /**
@@ -40,7 +51,7 @@ export async function seedMessaging() {
   await deleteSuiteConversations();
   await deletePairFriendships(learnerId, tutorId, tutor2Id);
 
-  await withDbRetry(() =>
+  await seedRetry(() =>
     db
       .insert(friendships)
       .values({ requesterId: learnerId, addresseeId: tutorId, status: 'accepted' })
@@ -65,7 +76,7 @@ async function deleteSuiteConversations() {
   if (!pairKeys.length) return;
 
   const doomed = (
-    await withDbRetry(() =>
+    await seedRetry(() =>
       db
         .select({ id: conversations.id })
         .from(conversations)
@@ -81,7 +92,7 @@ async function deleteSuiteConversations() {
   for (const id of doomed) {
     // Messages and memberships cascade from the conversation, and deleting an
     // already-removed conversation is a no-op, so this is safe to retry.
-    await withDbRetry(() => db.delete(conversations).where(eq(conversations.id, id)));
+    await seedRetry(() => db.delete(conversations).where(eq(conversations.id, id)));
   }
 }
 
@@ -92,7 +103,7 @@ async function deletePairFriendships(learnerId: string, tutorId: string, tutor2I
   ];
 
   for (const [a, b] of pairs) {
-    await withDbRetry(() =>
+    await seedRetry(() =>
       db
         .delete(friendships)
         .where(
@@ -106,7 +117,7 @@ async function deletePairFriendships(learnerId: string, tutorId: string, tutor2I
 }
 
 export async function getConversationIdByKey(a: string, b: string): Promise<string | null> {
-  const [row] = await withDbRetry(() =>
+  const [row] = await seedRetry(() =>
     db
       .select({ id: conversations.id })
       .from(conversations)
@@ -118,25 +129,33 @@ export async function getConversationIdByKey(a: string, b: string): Promise<stri
 
 /** Creates the direct conversation if it does not exist, as the app would. */
 export async function ensureDirectConversation(a: string, b: string): Promise<string> {
+  const key = directKey(a, b);
   const existing = await getConversationIdByKey(a, b);
   if (existing) return existing;
 
   const [conversation] = await db
     .insert(conversations)
-    .values({ type: 'direct', createdBy: a, directKey: directKey(a, b) })
+    .values({ type: 'direct', createdBy: a, directKey: key })
     .returning();
 
-  await db.insert(conversationMembers).values([
-    { conversationId: conversation.id, userId: a, role: 'member' },
-    { conversationId: conversation.id, userId: b, role: 'member' },
-  ]);
+  // conversation_members is unique on (conversation_id, user_id), so this is
+  // safe even if a retry repeats a membership that already landed.
+  await seedRetry(() =>
+    db
+      .insert(conversationMembers)
+      .values([
+        { conversationId: conversation.id, userId: a, role: 'member' },
+        { conversationId: conversation.id, userId: b, role: 'member' },
+      ])
+      .onConflictDoNothing()
+  );
 
   return conversation.id;
 }
 
 /** Creates the group thread if it does not exist, matching createGroup. */
 export async function ensureGroupConversation(members: string[]): Promise<string> {
-  const [existing] = await withDbRetry(() =>
+  const [existing] = await seedRetry(() =>
     db
       .select({ id: conversations.id })
       .from(conversations)
@@ -155,12 +174,17 @@ export async function ensureGroupConversation(members: string[]): Promise<string
     })
     .returning();
 
-  await db.insert(conversationMembers).values(
-    members.map((userId, idx) => ({
-      conversationId: conversation.id,
-      userId,
-      role: idx === 0 ? 'admin' : 'member',
-    }))
+  await seedRetry(() =>
+    db
+      .insert(conversationMembers)
+      .values(
+        members.map((userId, idx) => ({
+          conversationId: conversation.id,
+          userId,
+          role: idx === 0 ? 'admin' : 'member',
+        }))
+      )
+      .onConflictDoNothing()
   );
 
   return conversation.id;
