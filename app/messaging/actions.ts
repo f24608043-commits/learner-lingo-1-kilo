@@ -733,7 +733,10 @@ export async function getConversations(limit = 50) {
       if (item.lastReadAt === null) {
         // All messages are unread
       } else {
-        whereConditions.push(sql`${messages.createdAt} > ${item.lastReadAt}`);
+        // postgres-js rejects a Date inside a raw sql template; coerce it.
+        whereConditions.push(
+          sql`${messages.createdAt} > ${item.lastReadAt.toISOString()}`
+        );
       }
 
       const [unreadResult] = await withDbRetry(() =>
