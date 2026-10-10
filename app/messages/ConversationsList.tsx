@@ -16,20 +16,28 @@ interface ConversationItemProps {
     body: string;
   } | null;
   unreadCount: number;
+  onSelect?: (id: string) => void;
+  isSelected?: boolean;
 }
 
-export function ConversationItem({ conversation, lastMessage, unreadCount }: ConversationItemProps) {
+export function ConversationItem({ conversation, lastMessage, unreadCount, onSelect, isSelected }: ConversationItemProps) {
   const router = useRouter();
 
   const handleRowClick = () => {
-    router.push(`/messages/${conversation.id}`);
+    if (onSelect) {
+      onSelect(conversation.id);
+    } else {
+      router.push(`/messages/${conversation.id}`);
+    }
   };
 
   return (
     <div
       data-testid="conversation-item"
       onClick={handleRowClick}
-      className="rounded-2xl bg-gradient-to-br from-white to-blue-50 p-5 shadow-xl border-4 border-blue-100 transform hover:scale-[1.02] transition-all active:scale-[0.98] cursor-pointer"
+      className={`rounded-2xl bg-gradient-to-br from-white to-blue-50 p-5 shadow-xl border-4 border-blue-100 transform hover:scale-[1.02] transition-all active:scale-[0.98] cursor-pointer ${
+        isSelected ? "bg-tertiary/20 border-tertiary/50" : ""
+      }`}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
@@ -89,9 +97,11 @@ interface ConversationsListProps {
     } | null;
     unreadCount: number;
   }>;
+  onSelectConversation?: (id: string) => void;
+  selectedConversationId?: string | null;
 }
 
-export function ConversationsList({ conversations }: ConversationsListProps) {
+export function ConversationsList({ conversations, onSelectConversation, selectedConversationId }: ConversationsListProps) {
   return (
     <div className="space-y-3">
       {conversations.length === 0 ? (
@@ -111,6 +121,8 @@ export function ConversationsList({ conversations }: ConversationsListProps) {
             conversation={item.conversation}
             lastMessage={item.lastMessage}
             unreadCount={item.unreadCount}
+            onSelect={onSelectConversation}
+            isSelected={item.conversation.id === selectedConversationId}
           />
         ))
       )}

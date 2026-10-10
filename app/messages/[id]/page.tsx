@@ -242,7 +242,7 @@ export default function MessageThreadPage({ params }: { params: Promise<{ id: st
         <div className="flex items-center gap-2">
           {conversationType === "group" && jitsiRoomId && (
             <a
-              href={`https://meet.jit.si/${jitsiRoomId}`}
+              href={"https://meet.jit.si/" + jitsiRoomId}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 text-white px-4 py-2 font-label-sm font-bold shadow-xl border-4 border-white/30 transform hover:scale-105 transition-all active:scale-95"
@@ -270,16 +270,17 @@ export default function MessageThreadPage({ params }: { params: Promise<{ id: st
         ) : (
           <div className="max-w-3xl mx-auto space-y-4">
             {messages.map((msg) => (
-              <div
+<div
                 key={msg.message.id}
                 data-testid="message-bubble"
-                className={`flex ${msg.sender.id === currentUser?.id ? "justify-end" : "justify-start"}`}
+                className={"flex " + (msg.sender.id === currentUser?.id ? "justify-end" : "justify-start")}
               >
-                <div className={`max-w-[70%] rounded-2xl px-4 py-3 ${
-                  msg.sender.id === currentUser?.id
+                <div className={
+                  "max-w-[70%] rounded-2xl px-4 py-3 " +
+                  (msg.sender.id === currentUser?.id
                     ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
-                    : "bg-white border-2 border-gray-200 shadow-sm"
-                }`}>
+                    : "bg-white border-2 border-gray-200 shadow-sm")
+                }>
                   {msg.sender.id !== currentUser?.id && (
                     <p className="font-label-sm font-semibold mb-1">
                       {msg.sender.displayName || "Unknown"}
