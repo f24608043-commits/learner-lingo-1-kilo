@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef, use } from "react";
-import { getMessages, getConversationForMember, sendMessage, markRead, leaveGroup } from "../../messaging/actions";
+import { getMessages, getConversationForMember, markRead, leaveGroup } from "../../messaging/actions";
 import { createClient } from "@/utils/supabase/client";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { LoadingButton } from "@/components/LoadingButton";
 
 interface Message {
   message: {
@@ -21,9 +22,6 @@ interface Message {
 }
 
 export default function MessageThreadPage({ params }: { params: Promise<{ id: string }> }) {
-  // In Next 16 `params` arrives as a Promise even in a client component, so it
-  // has to be unwrapped. Reading `params.id` directly yields undefined, which
-  // silently broke loading, markRead and every send.
   const { id: conversationId } = use(params);
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -36,6 +34,7 @@ export default function MessageThreadPage({ params }: { params: Promise<{ id: st
   const [conversationTitle, setConversationTitle] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const isSubscribedRef = useRef(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -54,15 +53,12 @@ export default function MessageThreadPage({ params }: { params: Promise<{ id: st
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
-          // redirect() does not navigate from inside an effect or an event
-          // handler, so this left visitors on a page that never stopped loading.
           router.replace("/sign-in");
           return;
         }
 
         setCurrentUser(user);
 
-        // Load messages and the conversation header details together.
         const [initialMessages, meta] = await Promise.all([
           getMessages(conversationId),
           getConversationForMember(conversationId),
@@ -75,55 +71,56 @@ export default function MessageThreadPage({ params }: { params: Promise<{ id: st
           setIsLoading(false);
         }
 
-        // Mark as read
         await markRead(conversationId);
 
-        // Setup Realtime subscription
-        const channel = supabase
-          .channel(`messages:${conversationId}`)
-          .on(
-            "postgres_changes",
-            {
-              event: "INSERT",
-              schema: "public",
-              table: "messages",
-              filter: `conversation_id=eq.${conversationId}`,
-            },
-            async (payload) => {
-              const { data: { user: authUser } } = await supabase.auth.getUser();
-              if (authUser?.id === payload.new.sender_id) {
-                // Skip if it's our own message (optimistic update)
-                return;
+        if (!isSubscribedRef.current) {
+          const channel = supabase
+            .channel(`messages:${conversationId}`)
+            .on(
+              "postgres_changes",
+              {
+                event: "INSERT",
+                schema: "public",
+                table: "messages",
+                filter: `conversation_id=eq.${conversationId}`,
+              },
+              async (payload) => {
+                const { data: { user: authUser } } = await supabase.auth.getUser();
+                if (authUser?.id === payload.new.sender_id) {
+                  return;
+                }
+
+                const { data: profile } = await supabase
+                  .from("profiles")
+                  .select("id, display_name, avatar_url")
+                  .eq("id", payload.new.sender_id)
+                  .single();
+
+                const newMessage: Message = {
+                  message: {
+                    id: payload.new.id,
+                    body: payload.new.body,
+                    createdAt: new Date(payload.new.created_at),
+                  },
+                  sender: {
+                    id: profile?.id || payload.new.sender_id,
+                    displayName: profile?.display_name,
+                    avatarUrl: profile?.avatar_url,
+                  },
+                };
+
+                setMessages((prev) => [...prev, newMessage]);
+                await markRead(conversationId);
               }
+            )
+            .subscribe((status) => {
+              if (status === "SUBSCRIBED") {
+                isSubscribedRef.current = true;
+              }
+            });
 
-              // Fetch sender info
-              const { data: profile } = await supabase
-                .from("profiles")
-                .select("id, display_name, avatar_url")
-                .eq("id", payload.new.sender_id)
-                .single();
-
-              const newMessage: Message = {
-                message: {
-                  id: payload.new.id,
-                  body: payload.new.body,
-                  createdAt: new Date(payload.new.created_at),
-                },
-                sender: {
-                  id: profile?.id || payload.new.sender_id,
-                  displayName: profile?.display_name,
-                  avatarUrl: profile?.avatar_url,
-                },
-              };
-
-              setMessages((prev) => [...prev, newMessage]);
-
-              await markRead(conversationId);
-            }
-          )
-          .subscribe();
-
-        channelRef.current = channel;
+          channelRef.current = channel;
+        }
       } catch (error) {
         console.error("Error loading messages:", error);
         if (mounted) setIsLoading(false);
@@ -137,65 +134,74 @@ export default function MessageThreadPage({ params }: { params: Promise<{ id: st
       if (channelRef.current) {
         const supabase = createClient();
         supabase.removeChannel(channelRef.current);
+        isSubscribedRef.current = false;
       }
     };
   }, [conversationId]);
 
-  const handleSend = async () => {
-    if (!newMessage.trim() || isSending) return;
+   const handleSend = async () => {
+     if (!newMessage.trim() || isSending) return;
 
-    const tempMessage = newMessage;
-    setNewMessage("");
-    setIsSending(true);
+     const tempMessage = newMessage;
+     setNewMessage("");
+     setIsSending(true);
 
-    // Optimistic update
-    const optimisticMessage: Message = {
-      message: {
-        id: "temp",
-        body: tempMessage,
-        createdAt: new Date(),
-      },
-      sender: {
-        id: currentUser?.id || "",
-        displayName: currentUser?.user_metadata?.display_name || null,
-        avatarUrl: currentUser?.user_metadata?.avatar_url || null,
-      },
-    };
-    setMessages((prev) => [...prev, optimisticMessage]);
+     const optimisticMessage: Message = {
+       message: {
+         id: "temp",
+         body: tempMessage,
+         createdAt: new Date(),
+       },
+       sender: {
+         id: currentUser?.id || "",
+         displayName: currentUser?.user_metadata?.display_name || null,
+         avatarUrl: currentUser?.user_metadata?.avatar_url || null,
+       },
+     };
+     setMessages((prev) => [...prev, optimisticMessage]);
 
-    try {
-      const result = await sendMessage(conversationId, tempMessage);
-      // Swap the optimistic bubble for the stored one. Dropping it instead
-      // would leave the thread empty, because the Realtime handler below
-      // deliberately ignores messages sent by the current user.
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.message.id === "temp"
-            ? {
-                message: {
-                  id: result.message.id,
-                  body: result.message.body,
-                  createdAt: new Date(result.message.createdAt),
-                },
-                sender: {
-                  id: currentUser?.id || "",
-                  displayName: currentUser?.user_metadata?.display_name || null,
-                  avatarUrl: currentUser?.user_metadata?.avatar_url || null,
-                },
-              }
-            : m
-        )
-      );
-    } catch (error: any) {
-      console.error("Error sending message:", error);
-      // Revert optimistic update on error
-      setMessages((prev) => prev.filter((m) => m.message.id !== "temp"));
-      setNewMessage(tempMessage);
-      alert(error.message || "Failed to send message");
-    } finally {
-      setIsSending(false);
-    }
-  };
+     try {
+       const supabase = createClient();
+       const { data: insertedMessage, error } = await supabase
+         .from("messages")
+         .insert({
+           conversationId: conversationId,
+           senderId: currentUser?.id,
+           body: tempMessage,
+         })
+         .select()
+         .single();
+
+       if (error) throw error;
+
+       // Update the optimistic message with the real data from the insert
+       setMessages((prev) =>
+         prev.map((m) =>
+           m.message.id === "temp"
+             ? {
+                 message: {
+                   id: insertedMessage.id,
+                   body: insertedMessage.body,
+                   createdAt: new Date(insertedMessage.createdAt),
+                 },
+                 sender: {
+                   id: currentUser?.id || "",
+                   displayName: currentUser?.user_metadata?.display_name || null,
+                   avatarUrl: currentUser?.user_metadata?.avatar_url || null,
+                 },
+               }
+             : m
+         )
+       );
+     } catch (error: any) {
+       console.error("Error sending message:", error);
+       setMessages((prev) => prev.filter((m) => m.message.id !== "temp"));
+       setNewMessage(tempMessage);
+       alert(error.message || "Failed to send message");
+     } finally {
+       setIsSending(false);
+     }
+   };
 
   const handleLeaveGroup = async () => {
     if (!confirm("Are you sure you want to leave this conversation?")) return;
@@ -222,7 +228,6 @@ export default function MessageThreadPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="w-full h-screen flex flex-col bg-gradient-to-br from-background via-blue-50 to-purple-50">
-      {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <Link href="/messages" className="text-gray-500 hover:text-gray-700">
@@ -257,7 +262,6 @@ export default function MessageThreadPage({ params }: { params: Promise<{ id: st
         </div>
       </div>
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto p-6">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-400">
@@ -293,9 +297,6 @@ export default function MessageThreadPage({ params }: { params: Promise<{ id: st
         )}
       </div>
 
-      {/* Input */}
-      {/* The mascot chat widget is fixed at bottom-4 right-4 on md+, which would
-          otherwise sit on top of the send button and swallow every click. */}
       <div className="bg-white border-t border-gray-200 px-6 pt-4 pb-4 md:pb-28 shrink-0">
         <div className="max-w-3xl mx-auto flex gap-3">
           <input
@@ -309,14 +310,16 @@ export default function MessageThreadPage({ params }: { params: Promise<{ id: st
             disabled={isSending}
             maxLength={2000}
           />
-          <button
+          <LoadingButton
             onClick={handleSend}
             data-testid="message-send"
             disabled={!newMessage.trim() || isSending}
+            isLoading={isSending}
+            loadingText="Sending..."
             className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             <span className="material-symbols-outlined text-[20px]">send</span>
-          </button>
+          </LoadingButton>
         </div>
       </div>
     </div>

@@ -155,9 +155,9 @@ export async function requestSession(data: {
     throw new Error("You must be logged in");
   }
 
-  // Check for double-booking
-  for (const slot of data.requestedSlots) {
-    const [existing] = await db
+  // Check for double-booking - parallelize all slot checks
+  const slotChecks = data.requestedSlots.map(slot =>
+    db
       .select()
       .from(tutorSessions)
       .where(
@@ -168,11 +168,14 @@ export async function requestSession(data: {
           lte(tutorSessions.scheduledAt, new Date(slot.date + "T" + slot.endTime))
         )
       )
-      .limit(1);
+      .limit(1)
+  );
 
-    if (existing) {
-      throw new Error("This time slot is already booked");
-    }
+  const results = await Promise.all(slotChecks);
+  const hasConflict = results.some(r => r.length > 0);
+
+  if (hasConflict) {
+    throw new Error("This time slot is already booked");
   }
 
   // Create session request
@@ -598,10 +601,10 @@ export async function createRecurringSession(data: CreateRecurringSessionData) {
 
   const start = new Date(data.startDate);
   const end = new Date(data.endDate);
-  const sessions = [];
 
   // Generate all dates in the range that match the day of week
   const current = new Date(start);
+  const dateRanges: Array<{ start: Date; end: Date; durationMins: number }> = [];
   while (current <= end) {
     if (current.getDay() === data.dayOfWeek) {
       const startDateTime = new Date(current);
@@ -613,40 +616,52 @@ export async function createRecurringSession(data: CreateRecurringSessionData) {
       endDateTime.setHours(endHour, endMin, 0, 0);
 
       const durationMins = Math.round((endDateTime.getTime() - startDateTime.getTime()) / (1000 * 60));
-
-      // Check for conflicts
-      const [conflict] = await db
-        .select()
-        .from(tutorSessions)
-        .where(
-          and(
-            eq(tutorSessions.tutorId, data.tutorId),
-            eq(tutorSessions.status, "confirmed"),
-            gte(tutorSessions.scheduledAt, startDateTime),
-            lte(tutorSessions.scheduledAt, endDateTime)
-          )
-        )
-        .limit(1);
-
-      if (!conflict) {
-        const [session] = await db
-          .insert(tutorSessions)
-          .values({
-            learnerId: data.learnerId,
-            tutorId: data.tutorId,
-            courseId: data.courseId || null,
-            scheduledAt: startDateTime,
-            durationMins,
-            status: "confirmed",
-            jitsiRoomId: `recurring-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
-          })
-          .returning();
-
-        sessions.push(session);
-      }
+      dateRanges.push({ start: startDateTime, end: endDateTime, durationMins });
     }
     current.setDate(current.getDate() + 1);
   }
+
+  // Batch check all conflicts in parallel
+  const conflictChecks = dateRanges.map(({ start, end }) =>
+    db
+      .select()
+      .from(tutorSessions)
+      .where(
+        and(
+          eq(tutorSessions.tutorId, data.tutorId),
+          eq(tutorSessions.status, "confirmed"),
+          gte(tutorSessions.scheduledAt, start),
+          lte(tutorSessions.scheduledAt, end)
+        )
+      )
+      .limit(1)
+  );
+
+  const conflictResults = await Promise.all(conflictChecks);
+  const hasAnyConflict = conflictResults.some(r => r.length > 0);
+
+  if (hasAnyConflict) {
+    throw new Error("One or more time slots conflict with existing sessions");
+  }
+
+  // Insert all sessions in parallel
+  const sessionInserts = dateRanges.map(({ start, durationMins }) =>
+    db
+      .insert(tutorSessions)
+      .values({
+        learnerId: data.learnerId,
+        tutorId: data.tutorId,
+        courseId: data.courseId || null,
+        scheduledAt: start,
+        durationMins,
+        status: "confirmed",
+        jitsiRoomId: `recurring-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
+      })
+      .returning()
+  );
+
+  const insertedSessions = await Promise.all(sessionInserts);
+  const sessions = insertedSessions.map(r => r[0]);
 
   revalidatePath("/tutoring");
   return { success: true, sessions };

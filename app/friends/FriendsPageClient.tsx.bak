@@ -1,0 +1,155 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend } from "./actions";
+import Mascot from "@/components/Mascot";
+import Link from "next/link";
+
+const AVATAR_GRADIENTS = [
+  "from-pink-500 to-rose-500",
+  "from-purple-500 to-indigo-500",
+  "from-amber-400 to-orange-500",
+  "from-emerald-400 to-teal-500",
+  "from-blue-500 to-cyan-500",
+];
+
+interface FriendsPageClientProps {
+  initialQuery: string;
+  initialFriends: any[];
+  initialPendingRequests: any[];
+  initialSearchResults: any[];
+  initialFriendSuggestions: any[];
+}
+
+export default function FriendsPageClient({
+  initialQuery,
+  initialFriends,
+  initialPendingRequests,
+  initialSearchResults,
+  initialFriendSuggestions,
+}: {
+  initialQuery: string;
+  initialFriends: any[];
+  initialPendingRequests: any[];
+  initialSearchResults: any[];
+  initialFriendSuggestions: any[];
+}) {
+  const searchParams = useSearchParams();
+  const query = searchParams.get("query")?.trim() || "";
+  const [queryState, setQueryState] = useState("");
+  const [friends, setFriends] = useState(initialFriends);
+  const [pendingRequests, setPendingRequests] = useState(initialPendingRequests);
+  const [searchResults, setSearchResults] = useState(initialSearchResults);
+  const [friendSuggestions, setFriendSuggestions] = useState(initialFriendSuggestions);
+
+  useEffect(() => {
+    setQueryState(query);
+  }, [query]);
+
+  const router = useRouter();
+
+  return (
+    <div className="w-full max-w-5xl mx-auto px-4 md:px-6 py-6 min-h-screen">
+      <div className="relative w-full bg-gradient-to-br from-pink-500 via-rose-500 to-red-500 rounded-3xl p-1 shadow-2xl overflow-hidden mb-6 animate-slide-up">
+        <div className="absolute inset-0 rounded-3xl border-4 border-dashed border-white/40 pointer-events-none" />
+        <div className="relative bg-white/95 backdrop-blur-md rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col gap-2 max-w-xl">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="px-3 py-1 rounded-full bg-pink-100 text-pink-700 font-label-sm text-xs font-black uppercase tracking-wider border border-pink-200">
+                Social Learning
+              </span>
+              <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 font-label-sm text-xs font-black uppercase tracking-wider border border-green-200">
+                {initialFriends.length} Friends
+              </span>
+              {initialPendingRequests.length > 0 && (
+                <span className="px-3 py-1 rounded-full bg-orange-100 text-orange-700 font-label-sm text-xs font-black uppercase tracking-wider border border-orange-200 animate-pulse">
+                  {initialPendingRequests.length} Pending
+                </span>
+              )}
+            </div>
+            <h1 className="font-headline-xl text-text-primary tracking-tight font-black text-2xl md:text-3xl">
+              Your Learning Squad 🤝
+            </h1>
+            <p className="font-body-sm text-text-muted">
+              Learning with friends makes you 5x more likely to finish a course! Practice together, cheer each other, and compare streaks.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-4 shrink-0">
+            <div className="relative w-24 h-24 hidden sm:flex items-center justify-center animate-float">
+              <Mascot pose="encouraging" size={96} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-3xl p-5 shadow-clay-surface border border-surface-border mb-6 animate-slide-up delay-75">
+        <h2 className="font-headline-md text-text-primary font-black mb-2 text-base md:text-lg flex items-center gap-2">
+          <span className="material-symbols-outlined text-primary text-[22px]">person_search</span>
+          Find & Add Friends
+        </h2>
+        <form method="GET" action="/friends" className="flex gap-2">
+          <input
+            type="text"
+            name="query"
+            value=""
+            onChange={(e) => setQueryState(e.target.value)}
+            placeholder="Search by learner name..."
+            className="flex-1 rounded-2xl border-2 border-surface-border bg-gray-50 px-4 py-2.5 text-sm font-medium text-text-primary focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all shadow-inner"
+          />
+          <button
+            type="submit"
+            className="rounded-2xl bg-primary text-white px-6 py-2.5 font-label-md font-black uppercase tracking-wide shadow-md border-b-4 border-primary-dark hover:brightness-105 active:translate-y-[2px] active:border-b-[1px] transition-all cursor-pointer text-sm shrink-0"
+          >
+            Search
+          </button>
+        </form>
+
+        <div className="mt-4 pt-4 border-t border-surface-border">
+          <p className="font-label-sm text-text-muted text-xs font-bold mb-3">
+            Search results
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {initialSearchResults.map((learner: any) => {
+              const isAlreadyFriend = initialFriends.some((f: any) => f.id === learner.id);
+
+              return (
+                <div key={learner.id} data-testid="friend-search-result" className="p-3 rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-emerald-400 text-white font-extrabold flex items-center justify-center text-sm shrink-0">
+                      {learner.displayName?.[0] || "?"}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-label-md font-bold text-text-primary truncate text-sm">{learner.displayName}</p>
+                      <p className="font-body-sm text-xs text-text-muted">{learner.xp || 0} XP</p>
+                    </div>
+                  </div>
+
+                  {isAlreadyFriend ? (
+                    <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full border border-green-200">
+                      Friends ✓
+                    </span>
+                  ) : (
+                    <form action={async () => {
+                      "use server";
+                      await sendFriendRequest(learner.id);
+                    }}>
+                      <button
+                        type="submit"
+                        data-testid="friend-add-button"
+                        className="rounded-xl bg-primary text-white px-3 py-1.5 font-label-sm font-bold text-xs shadow-sm border-b-2 border-primary-dark hover:brightness-105 active:translate-y-[1px] transition-all cursor-pointer"
+                      >
+                        + Add
+                      </button>
+                    </form>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

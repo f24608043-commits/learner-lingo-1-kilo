@@ -12,6 +12,9 @@ import { getLevelInfo } from "@/lib/xp";
 // Creates the Duolingo zigzag: left-center-right-center repeat
 const ZIGZAG = ["-translate-x-12", "translate-x-0", "translate-x-12", "translate-x-0"];
 
+// Force dynamic rendering to always fetch fresh progress data
+export const dynamic = "force-dynamic";
+
 // Colors cycle for unit sections
 const UNIT_GRADIENTS = [
   { from: "from-blue-500",   to: "to-cyan-500",    shadow: "rgba(59,130,246,0.4)"  },

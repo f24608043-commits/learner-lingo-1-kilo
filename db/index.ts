@@ -20,11 +20,11 @@ function getClient(): postgres.Sql {
       // Supabase's pooler frequently refuses or drops idle connections, and a
       // cold pool then has to reconnect on the next query. Keeping connections
       // warm for far longer avoids most of those connect-time ETIMEDOUTs.
-      idle_timeout: 600,
+      idle_timeout: 1800, // 30 minutes - longer to prevent cold connections
       // Kept short on purpose. withDbRetry makes three attempts, so a long
       // connect timeout would let one unlucky action stretch to 90s and look
       // like a hung request to the UI. Normal connects take well under a second.
-      connect_timeout: 10,
+      connect_timeout: 15, // Slightly longer for cold starts
       max_lifetime: 60 * 30, // Recycle connections every 30 minutes
     });
   }
@@ -87,3 +87,22 @@ export async function withDbRetry<T>(
 
 // Export schema tables for convenience
 export * from "./schema";
+
+/**
+ * Warm up the connection pool by making a lightweight query.
+ * Call this on app startup or periodically to prevent cold connections.
+ */
+export async function warmUpConnectionPool(): Promise<void> {
+  try {
+    const client = getClient();
+    await client`SELECT 1`;
+    console.log("[DB] Connection pool warmed up successfully");
+  } catch (error) {
+    console.error("[DB] Failed to warm up connection pool:", error);
+  }
+}
+
+// Call warm-up on module load in production
+if (process.env.NODE_ENV === "production") {
+  warmUpConnectionPool().catch(() => {});
+}

@@ -15,6 +15,7 @@ import {
 } from "@/db/schema";
 import { and, count, eq, inArray, sql } from "drizzle-orm";
 import { checkAndAwardBadges } from "@/app/gamification/actions";
+import { revalidatePath } from "next/cache";
 
 export interface QuizSubmissionResult {
   success: boolean;
@@ -34,7 +35,6 @@ export interface QuizSubmissionResult {
 export async function submitQuiz(
   lessonId: string,
   userAnswers: Record<string, string>,
-  // Client-submitted score parameter to test tamper-resistance (MUST BE IGNORED)
   _clientSuppliedScore?: number
 ): Promise<QuizSubmissionResult> {
   const supabase = await createClient();
@@ -46,7 +46,6 @@ export async function submitQuiz(
     throw new Error("Unauthorized");
   }
 
-  // 1. Fetch lesson details
   const [lesson] = await db
     .select()
     .from(lessons)
@@ -57,7 +56,6 @@ export async function submitQuiz(
     throw new Error("Lesson not found");
   }
 
-  // 2. Fetch challenges for this lesson from database
   const lessonChallenges = await db
     .select()
     .from(challenges)
@@ -69,13 +67,11 @@ export async function submitQuiz(
 
   const challengeIds = lessonChallenges.map((c) => c.id);
 
-  // 3. Fetch challenge options from database (source of truth for correct answers)
   const options = await db
     .select()
     .from(challengeOptions)
     .where(inArray(challengeOptions.challengeId, challengeIds));
 
-  // 4. Grade server-side (FR3.3: client score is completely ignored)
   let totalPoints = 0;
   let earnedPoints = 0;
   let correctCount = 0;
@@ -103,7 +99,6 @@ export async function submitQuiz(
   const passed = calculatedPercentage >= 50;
   const badgesAwarded: string[] = [];
 
-  // 5. Update user_progress
   const [existingProgress] = await db
     .select()
     .from(userProgress)
@@ -134,7 +129,6 @@ export async function submitQuiz(
         },
       });
 
-    // 6. Award XP and update streak in profiles
     const [profile] = await db
       .select()
       .from(profiles)
@@ -172,7 +166,11 @@ export async function submitQuiz(
         .where(eq(profiles.id, user.id));
     }
 
-    // 7. Insert daily activity log
+    revalidatePath("/path");
+    revalidatePath(`/lesson/${lessonId}`);
+    revalidatePath("/groups");
+    revalidatePath("/messages");
+
     await db
       .insert(dailyActivityLog)
       .values({
@@ -181,12 +179,9 @@ export async function submitQuiz(
       })
       .onConflictDoNothing();
 
-    // 8. Check and award general badges
     const generalBadges = await checkAndAwardBadges(user.id);
     badgesAwarded.push(...generalBadges);
 
-    // 9. Unit completion badge (FR9.1d) - special case not in general function
-    // Check if ALL lessons in this lesson's unit are now completed by this user
     const [thisLesson] = await db
       .select({ unitId: lessons.unitId })
       .from(lessons)
@@ -243,7 +238,6 @@ export async function submitQuiz(
       }
     }
   } else {
-    // Failed attempt
     await db
       .insert(userProgress)
       .values({
@@ -261,9 +255,11 @@ export async function submitQuiz(
           updatedAt: new Date(),
         },
       });
+
+    revalidatePath(`/lesson/${lessonId}`);
+    revalidatePath("/path");
   }
 
-  // Fetch additional stats for celebration
   const [profileStats] = await db
     .select({ xp: profiles.xp, streakCount: profiles.streakCount })
     .from(profiles)
@@ -280,16 +276,15 @@ export async function submitQuiz(
       )
     );
 
-  // Determine mascot pose based on result
   let mascotPose: QuizSubmissionResult["mascotPose"];
   if (passed) {
     if (badgesAwarded.length > 0) {
-      mascotPose = "celebrate"; // Badge unlocked
+      mascotPose = "celebrate";
     } else {
-      mascotPose = "encouraging"; // Lesson passed
+      mascotPose = "encouraging";
     }
   } else {
-    mascotPose = "encouraging"; // Wrong answer - encourage to try again
+    mascotPose = "encouraging";
   }
 
   return {
