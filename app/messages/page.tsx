@@ -7,6 +7,7 @@ import { ConversationsList } from "./ConversationsList";
 import { Skeleton, ListSkeleton } from "@/components/Skeleton";
 import Mascot from "@/components/Mascot";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { getCurrentUser } from "@/app/actions/auth";
 
 interface Conversation {
   conversation: {
@@ -33,17 +34,26 @@ export default function MessagesPage() {
   const [showThread, setShowThread] = useState(false);
   const [user, setUser] = useState<any>(null);
 
-  // Check auth on mount
+  // Check auth on mount via API route
   useEffect(() => {
     const checkAuth = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/sign-in");
-        return;
+      try {
+        const response = await fetch("/api/auth/user");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.user) {
+            setUser(data.user);
+            setAuthChecked(true);
+          } else {
+            router.replace("/sign-in");
+          }
+        } else {
+          router.replace("/sign-in");
+        }
+      } catch (err) {
+        console.error("Auth check failed:", err);
+        router.replace("/sign-in");
       }
-      setUser(user);
-      setAuthChecked(true);
     };
     checkAuth();
   }, [router]);
@@ -55,6 +65,21 @@ export default function MessagesPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-500">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If user is not set after auth check, redirect to sign-in
+  if (!user) {
+    useEffect(() => {
+      router.replace("/sign-in");
+    }, [router]);
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-500">Redirecting to sign in...</p>
         </div>
       </div>
     );
@@ -252,7 +277,7 @@ function MessagesHeader({ conversations, unreadCount }: { conversations: Convers
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined text-on-secondary-container text-[28px]" style={{ fontVariationSettings: 'FILL 1' }}>chat</span>
             <div>
-              <h1 className="font-headline-xl text-headline-xl text-on-secondary-container font-extrabold">Messages</h1>
+              <h1 className="font-headline-xl text-headline-xl text-on-secondary-container font-extrabold" data-testid="messages-heading">Messages</h1>
               <p className="font-body-sm text-on-surface-variant">
                 {unreadCount > 0 ? `${unreadCount} unread message${unreadCount > 1 ? 's' : ''}` : "All caught up!"}
               </p>
