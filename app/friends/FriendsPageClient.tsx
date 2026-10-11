@@ -298,6 +298,7 @@ export default function FriendsPageClient() {
           <span className="px-3 py-1 rounded-full bg-pink-100 text-pink-700 font-label-sm text-xs font-black uppercase tracking-wider border border-pink-200">
             👥 Social Learning
           </span>
+          <h1 className="font-headline-md text-headline-md text-text-primary font-extrabold">Your Learning Squad</h1>
           <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 font-label-sm text-xs font-black uppercase tracking-wider border border-green-200">
             {friends.length} Friends
           </span>

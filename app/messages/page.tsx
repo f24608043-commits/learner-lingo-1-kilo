@@ -27,9 +27,38 @@ export default function MessagesPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [showThread, setShowThread] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  // Check auth on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push("/sign-in");
+        return;
+      }
+      setUser(user);
+      setAuthChecked(true);
+    };
+    checkAuth();
+  }, [router]);
+
+  // Don't render anything until auth is checked
+  if (!authChecked) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-500">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Extract conversation ID from URL
   useEffect(() => {
@@ -94,7 +123,7 @@ export default function MessagesPage() {
   // Show selected conversation thread
   const selectedConversation = conversations.find(c => c.conversation.id === selectedConversationId);
 
-  if (loading) {
+  if (loading && authChecked) {
     return (
       <div className="w-full px-6 py-6 bg-gradient-to-br from-background via-blue-50 to-purple-50 min-h-screen">
         <MessagesHeaderSkeleton />
